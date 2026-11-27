@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace AntigravityHud
 {
@@ -817,42 +818,155 @@ namespace AntigravityHud
             return true;
         }
 
+        // Cached taskbar layout preferences (refreshed every 15s, zero overhead)
+        private DateTime _lastTaskbarPrefUtc = DateTime.MinValue;
+        private bool _cachedIsWin11;
+        private bool _cachedIsCenteredTaskbar;
+        private bool _cachedWidgetsVisible;
+
+        private void RefreshTaskbarPrefsIfNeeded()
+        {
+            DateTime nowUtc = DateTime.UtcNow;
+            if (_lastTaskbarPrefUtc != DateTime.MinValue && (nowUtc - _lastTaskbarPrefUtc).TotalSeconds < 15.0)
+                return;
+            _lastTaskbarPrefUtc = nowUtc;
+
+            int build = 0;
+            try
+            {
+                using (RegistryKey k = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion", false))
+                {
+                    object bv = k != null ? k.GetValue("CurrentBuildNumber") : null;
+                    if (bv != null) int.TryParse(bv.ToString(), out build);
+                }
+            }
+            catch { }
+
+            _cachedIsWin11 = build >= 22000;
+            bool centered = _cachedIsWin11;
+            bool widgetsOn = false;
+
+            try
+            {
+                using (RegistryKey adv = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", false))
+                {
+                    if (adv != null)
+                    {
+                        object al = adv.GetValue("TaskbarAl");
+                        if (al != null) centered = Convert.ToInt32(al) != 0;
+
+                        object da = adv.GetValue("TaskbarDa");
+                        if (da != null) widgetsOn = Convert.ToInt32(da) != 0;
+                    }
+                }
+            }
+            catch { }
+
+            if (widgetsOn)
+            {
+                try
+                {
+                    using (RegistryKey pol = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Policies\Microsoft\Dsh", false))
+                    {
+                        object allow = pol != null ? pol.GetValue("AllowNewsAndInterests") : null;
+                        if (allow != null && Convert.ToInt32(allow) == 0) widgetsOn = false;
+                    }
+                }
+                catch { }
+            }
+
+            _cachedIsCenteredTaskbar = _cachedIsWin11 && centered;
+            _cachedWidgetsVisible = _cachedIsWin11 && widgetsOn;
+        }
+
         public Point ComputeTaskbarAnchorPoint(int barW, int barH)
         {
+            RefreshTaskbarPrefsIfNeeded();
+
+            Rectangle scr = Screen.PrimaryScreen.Bounds;
+            Rectangle wa = Screen.PrimaryScreen.WorkingArea;
+            int margin = S(10);
+
             IntPtr hTray = NativeMethods.FindWindow("Shell_TrayWnd", null);
             if (hTray != IntPtr.Zero)
             {
                 NativeMethods.RECT rcTray;
-                if (NativeMethods.GetWindowRect(hTray, out rcTray) && (rcTray.Bottom - rcTray.Top) >= 24)
+                if (NativeMethods.GetWindowRect(hTray, out rcTray))
                 {
+                    int trayW = rcTray.Right - rcTray.Left;
                     int trayH = rcTray.Bottom - rcTray.Top;
-                    int anchorRight = rcTray.Right - S(160);
+                    bool isBottomHorizontal = trayW > trayH && trayH >= 24 && rcTray.Top >= scr.Top + scr.Height / 2;
 
-                    IntPtr hNotify = NativeMethods.FindWindowEx(hTray, IntPtr.Zero, "TrayNotifyWnd", null);
-                    NativeMethods.RECT rcNotify;
-                    if (hNotify != IntPtr.Zero && NativeMethods.GetWindowRect(hNotify, out rcNotify) && rcNotify.Left > rcTray.Left)
+                    if (isBottomHorizontal)
                     {
-                        anchorRight = rcNotify.Left - S(8);
-                    }
+                        int yOnTray = rcTray.Top + (trayH - barH) / 2;
 
-                    int minLeft = rcTray.Left + S(12);
-                    IntPtr hRebar = NativeMethods.FindWindowEx(hTray, IntPtr.Zero, "ReBarWindow32", null);
-                    NativeMethods.RECT rcRebar;
-                    if (hRebar != IntPtr.Zero && NativeMethods.GetWindowRect(hRebar, out rcRebar) && rcRebar.Right > minLeft)
-                    {
-                        minLeft = rcRebar.Right + S(10);
-                    }
+                        int notifyLeft = rcTray.Right - S(160);
+                        IntPtr hNotify = NativeMethods.FindWindowEx(hTray, IntPtr.Zero, "TrayNotifyWnd", null);
+                        NativeMethods.RECT rcNotify;
+                        if (hNotify != IntPtr.Zero && NativeMethods.GetWindowRect(hNotify, out rcNotify) && rcNotify.Left > rcTray.Left)
+                        {
+                            notifyLeft = rcNotify.Left;
+                        }
 
-                    int x = Math.Max(minLeft, anchorRight - barW);
-                    int y = rcTray.Top + (trayH - barH) / 2;
-                    return new Point(x, y);
+                        if (_cachedIsCenteredTaskbar)
+                        {
+                            // Windows 11 centered taskbar: estimate centered icon cluster span
+                            int centerEstW = Math.Min((int)Math.Round(trayW * 0.44), S(540));
+                            int trayMid = rcTray.Left + trayW / 2;
+                            int centerLeft = trayMid - centerEstW / 2;
+                            int centerRight = trayMid + centerEstW / 2;
+
+                            int leftStart = rcTray.Left + (_cachedWidgetsVisible ? S(162) : margin);
+                            int leftEnd = centerLeft - S(10);
+                            int leftGap = leftEnd - leftStart;
+
+                            int rightStart = centerRight + S(10);
+                            int rightEnd = notifyLeft - S(8);
+                            int rightGap = rightEnd - rightStart;
+
+                            // Prefer left free slot first (avoids crowded tray notifications); fall back to right if wider
+                            if (leftGap >= barW)
+                            {
+                                return new Point(leftStart, yOnTray);
+                            }
+                            if (rightGap >= barW)
+                            {
+                                return new Point(rightEnd - barW, yOnTray);
+                            }
+
+                            // Compact/small screen protection: neither taskbar side fits cleanly without covering icons,
+                            // so float neatly just above the bottom-left edge of the taskbar.
+                            return new Point(wa.Left + margin, Math.Max(wa.Top + S(6), wa.Bottom - barH - S(8)));
+                        }
+                        else
+                        {
+                            // Windows 10 or Win11 left-aligned taskbar: left side holds Start + pinned/running icons,
+                            // so check free space between ReBarWindow32 and TrayNotifyWnd on the right.
+                            int minLeft = rcTray.Left + S(12);
+                            IntPtr hRebar = NativeMethods.FindWindowEx(hTray, IntPtr.Zero, "ReBarWindow32", null);
+                            NativeMethods.RECT rcRebar;
+                            if (hRebar != IntPtr.Zero && NativeMethods.GetWindowRect(hRebar, out rcRebar) && rcRebar.Right > minLeft)
+                            {
+                                minLeft = rcRebar.Right + S(10);
+                            }
+
+                            int rightEnd = notifyLeft - S(8);
+                            int rightGap = rightEnd - minLeft;
+                            if (rightGap >= barW)
+                            {
+                                return new Point(rightEnd - barW, yOnTray);
+                            }
+
+                            // Compact/small screen protection: float neatly above bottom-right edge without overlapping icons
+                            return new Point(Math.Max(wa.Left + margin, wa.Right - barW - margin), Math.Max(wa.Top + S(6), wa.Bottom - barH - S(8)));
+                        }
+                    }
                 }
             }
 
-            Rectangle scr = Screen.PrimaryScreen.Bounds;
-            Rectangle wa = Screen.PrimaryScreen.WorkingArea;
-            int fallbackY = wa.Bottom < scr.Bottom ? (wa.Bottom + (scr.Bottom - wa.Bottom - barH) / 2) : (wa.Bottom - barH - S(4));
-            return new Point(scr.Right - barW - S(260), fallbackY);
+            // Fallback when taskbar is auto-hidden or docked vertically/top: safe bottom-left above working area
+            return new Point(wa.Left + margin, Math.Max(wa.Top + S(6), wa.Bottom - barH - S(8)));
         }
 
         public Rectangle GetActualScreenBounds()

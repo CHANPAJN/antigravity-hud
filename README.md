@@ -24,7 +24,8 @@ English | [简体中文](README.zh-CN.md)
 
 ## Features
 
-- **Floating Capsule Bar (Long-Press to Move)**
+- **Floating Capsule Bar (Smart Free-Space Placement + Long-Press to Move)**
+  - **Smart Auto-Placement**: detects Windows 11 centered vs. left-aligned taskbars and Widgets state — prefers the open **left taskbar slot** on Win11 centered taskbars, uses the right slot on Win10/left-aligned taskbars, and automatically floats cleanly just above the taskbar on compact laptop screens so it never covers your app icons or system tray.
   - **Click** to toggle the detailed HUD & ledger panel without stealing focus from Antigravity.
   - **Long-press (≥ 260 ms) or drag** to freely move the capsule anywhere across single or multiple monitors.
   - **Smart Edge & Taskbar Snapping**: magnetically snaps to screen edges and the Windows taskbar centerline (hold `Alt` while dragging for pixel-level fine placement).

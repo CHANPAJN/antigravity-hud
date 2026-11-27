@@ -1,0 +1,17 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and verify bilingual offscreen renders
+        shell: pwsh
+        run: ./tests/verify.ps1

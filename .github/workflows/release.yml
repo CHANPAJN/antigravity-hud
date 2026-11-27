@@ -1,0 +1,36 @@
+name: Release Windows Binary
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.0.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build AntigravityHUD.exe
+        shell: pwsh
+        run: |
+          ./scripts/build.ps1 -OutFile dist/AntigravityHUD.exe
+          ./tests/verify.ps1
+          $hash = (Get-FileHash -Path dist/AntigravityHUD.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  AntigravityHUD.exe" | Set-Content -Path dist/SHA256SUMS.txt -Encoding ascii
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/AntigravityHUD.exe
+            dist/SHA256SUMS.txt
+          generate_release_notes: true

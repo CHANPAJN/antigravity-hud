@@ -1,0 +1,9 @@
+dist/
+*.exe
+*.dll
+*.pdb
+*.tmp
+*.err
+.vs/
+bin/
+obj/

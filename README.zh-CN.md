@@ -1,14 +1,27 @@
 # Antigravity HUD
 
-**专为 Windows 打造的 Google Antigravity 轻量级原生悬浮 HUD 与本地 Token 账本。**
+**给 Google Antigravity 用的 Windows 任务栏小胶囊：不用改官方客户端、不用装插件，直接看上下文进度、缓存命中、Token 消耗和快捷指令。**
 
 [English](README.md) | 简体中文
 
 [![支持平台: Windows 10/11](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?style=flat-square)](https://github.com/CHANPAJN/antigravity-hud)
 [![开源协议: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-2563EB?style=flat-square)](LICENSE)
-[![零第三方依赖](https://img.shields.io/badge/Dependencies-0%20(Windows%20自带%20csc.exe)-10B981?style=flat-square)](#快速开始)
+[![零第三方依赖](https://img.shields.io/badge/Dependencies-0%20(Windows%20自带%20csc.exe)-10B981?style=flat-square)](#怎么用)
 
-> **仅支持 Windows 10 / 11 · 唯一目的：不改客户端** — 做一个独立外置小工具的**唯一初衷**，就是为了完整保留 Google Antigravity 官方客户端的一尘不染：**绝不修改客户端文件、绝不往界面塞插件、纯本地 0 外联、绝不碰账号凭据**。纯 C# Win32 原生编写，约 236 KB，零第三方依赖。
+---
+
+## 它是干嘛的？
+
+很多用反重力（Antigravity）的朋友喜欢官方客户端干干净净、一尘不染的样子——不想为了看上下文用了多少，往客户端里塞一堆插件，更不想改 `app.asar` 或把账号凭据交给第三方。
+
+做这个小工具的**唯一目的，就是不改官方客户端**。它是一个完全独立的外置 Windows 小程序（约 236 KB），只读本机日志文件，全程断网不外联，自动跟在任务栏空位上：
+
+- **一眼看当前对话**：上下文用了百分之多少、缓存命中率、生成速度、思考量（同时支持主端 / Insiders / CLI）。
+- **点开看三页**：
+  1. **窗口 HUD**：当前窗口上下文构成拆解、每轮耗时与缓存命中、子任务明细。
+  2. **全局账本**：今日 / 昨日 / 7天 / 30天消耗统计、7日柱状图、按模型和任务排行。
+  3. **快捷指令**：内置 `/btw`、`/compact`、`/boost`、`/plan` 等 10 个官方斜杠命令，点一下只复制到剪贴板，不注入客户端，切回输入框 `Ctrl+V` 即用。
+- **随手怎么顺手怎么放**：长按胶囊 0.3 秒就能拖去任意屏幕或角落（带磁吸），右键圆角菜单切 3 档宽度、浅色/暗黑模式（默认自动跟随系统）、锁定位置、中英文和开机自启。
 
 <p align="center">
   <img src="docs/preview-bar-zh.png" alt="任务栏悬浮胶囊（默认浅色）" width="320" />
@@ -26,63 +39,33 @@
 
 <p align="center">
   <img src="docs/preview-dark-box-zh.png" alt="原生暗黑模式预览小框" width="68%" /><br/>
-  <sub>上方为默认清爽浅色模式 · 同时内置原生深色模式（默认自动跟随 Windows 任务栏与应用深浅主题，右键菜单可随时切换 <code>跟随系统 / 浅色 / 深色</code>）。</sub>
+  <sub>上方为默认清爽浅色模式 · 同时内置原生深色模式（默认自动跟随 Windows 系统深浅色，右键可随时手动切 <code>跟随系统 / 浅色 / 深色</code>）。</sub>
 </p>
 
 ---
 
-## 核心特性
+## 怎么用？（30 秒上手）
 
-- **不污染官方客户端**：不改 `app.asar`、不往聊天界面塞冗余插件栏，保持官方客户端原汁原味一尘不染，同时通吃 Antigravity 主端、Insiders 与 CLI。
-- **悬浮胶囊条（智能寻空位停靠 + 长按自由移动）**
-  - **智能寻空位默认停靠**：自动识别 Windows 11 居中任务栏 / 左对齐任务栏及天气小组件开关——Win11 居中任务栏优先停靠**左侧空闲区**（避开右下角拥挤的托盘通知）；Win10 或左对齐任务栏自动寻找右侧空位；**小屏笔记本任务栏空隙不足时自动上浮至任务栏正上方**，绝不遮挡任务栏图标。
-  - **短按左键**：原地展开 / 收起详细 HUD 与账本面板，不抢占 Antigravity 输入焦点。
-  - **长按（≥ 260ms）或拖动**：可将胶囊自由移动到屏幕任意位置或任意副屏显示器。
-  - **现代 Win11 圆角右键菜单**：内置三段式胶囊宽度切换（`极致短 / 干练 / 带标签`）与三段式外观主题切换（`跟随系统 / 浅色 / 深色`）、锁定位置滑块开关、一键归位、中英切换、开机自启开关与日志目录直达。
-- **原生浅色 / 暗黑双主题**
-  - 默认 **`跟随系统`**（实时监听 Windows 任务栏与应用深浅主题切换：胶囊跟随任务栏深浅，面板与菜单跟随应用深浅），暗黑模式采用中性石墨灰，拒绝刺眼深蓝霓虹；也可在右键菜单随时手动锁定浅色或深色。
-  - **智能边缘与任务栏磁吸**：拖动时自动吸附屏幕四边及 Windows 任务栏垂直中轴线（按住 `Alt` 拖动可临时关闭磁吸精调）。
-  - **左右锚点防漂移**：自动记录停靠在屏幕左半区或右半区并持久化到 `%LOCALAPPDATA%\AntigravityHUD\config.json`，当胶囊文字动态伸缩时保持贴边不漂移、不出屏。
-  - **弹窗四向智能避让**：默认向胶囊上方展开；若胶囊被拖至屏幕顶部，面板自动向下方翻转展开，并自适应所在显示器工作区边界。
-  - **一键锁定 / 复位**：右键菜单支持「锁定胶囊位置」防误拖，以及「重置到默认任务栏位置」一键归位。
-- **窗口 HUD（当前会话实时监控）**
-  - 自动跟随当前激活的 Google Antigravity / Antigravity Insiders / Antigravity CLI 窗口。
-  - 实时显示上下文进度环（支持 `自动` / `256K` / `1M` 标尺）、Prompt 缓存命中率、生成速度（`t/s`）、思考深度、上下文构成拆解（工具返回 / 思考与回复 / 系统规则 / 用户输入）、逐轮响应明细及子任务透视。
-- **全局账本（纯本地离线多周期统计）**
-  - 基于本地会话日志汇总 `今日` / `昨日` / `7天` / `30天` / `全部` 消耗。
-  - 内置近 7 日可交互柱状图、按主力模型 / 按会话任务排行（自动合并关联子任务）、点击模型行下钻分析各对话与高频工具分布。
-- **快捷指令（官方斜杠命令 · 纯剪贴板复制零侵入）**
-  - 第 3 页收纳全部官方斜杠命令（`/btw`、`/compact`、`/goal`、`/teamwork`、`/boost`、`/plan`、`/grill-me`、`/browser`、`/schedule`、`/learn`），免切中英输入法、免背英文拼写。
-  - **严格只写系统剪贴板、绝不做模拟按键注入**：点一下即复制并自动收起交回焦点，按 `Ctrl+V` 即可使用；当上下文占用达到 `≥ 75%` 时自动联动提醒 `/compact` 一键折叠。
-- **中英双语（自动跟随系统 + 一键热切）**
-  - 首次启动自动识别 Windows 系统语言，面板顶栏与右键菜单均可一键切换 `简体中文 / English`。
-- **可选内存与临时缓存辅助（默认全关）**
-  - 只读展示 Antigravity 工作集内存占用；自动省存与缓存清理默认处于**关闭状态**，仅在用户主动点开或手动点击时生效。
+### 方式一：直接下载运行（最省事）
 
----
+去 [GitHub Releases](https://github.com/CHANPAJN/antigravity-hud/releases) 下载 `AntigravityHUD.exe`（由本仓库 GitHub Actions 自动编译，附 `SHA256SUMS.txt`），双击直接跑，不需要安装任何运行库。
 
-## 快速开始
+### 方式二：自己从源码 1 秒编译（不放心 exe 就自己编）
 
-### 方式一：零依赖源码一键本地编译安装（推荐）
-
-Windows 10 / 11 系统已原生自带 `.NET Framework 4.x` 编译器（`csc.exe`），**无需安装 Visual Studio、.NET SDK 或 Node.js**。
+Windows 10 / 11 自带 `.NET Framework 4.x` 编译器（`csc.exe`），**不用装 Visual Studio、.NET SDK 或 Node.js**，全部 14 个明文 `.cs` 文件就在 `src/` 目录里：
 
 ```powershell
 git clone https://github.com/CHANPAJN/antigravity-hud.git
 cd antigravity-hud
 
-# 1 秒本地编译并安装到 %LOCALAPPDATA%\AntigravityHUD
+# 1 秒编译并安装到 %LOCALAPPDATA%\AntigravityHUD（默认不写开机自启）
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 
-# 可选：同时开启开机自启（默认不写启动项）
+# 如果需要顺便打开开机自启，加上 -Autostart
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Autostart
 ```
 
-也可以直接双击根目录 `build.cmd`，1 秒编出约 215 KB 的绿色单文件 `dist\AntigravityHUD.exe` 直接运行。
-
-### 方式二：下载 GitHub Releases 预编译版
-
-前往 [GitHub Releases](https://github.com/CHANPAJN/antigravity-hud/releases) 下载由 GitHub 官方 `windows-latest` 流水线自动构建的 `AntigravityHUD.exe` 及 `SHA256SUMS.txt`。
+也可以直接双击根目录的 `build.cmd`，1 秒编出绿色单文件 `dist\AntigravityHUD.exe`。
 
 ### 干净卸载
 
@@ -90,84 +73,47 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Autostart
 powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1
 ```
 
-自动优雅关闭运行中的实例，清理启动项、开始菜单快捷方式、程序与配置文件（如需保留位置配置，可追加 `-KeepConfig`）。
-
 ---
 
-## 交互操作速查
+## 常用操作
 
 | 操作 | 效果 |
 | --- | --- |
-| **左键短按胶囊** | 展开 / 收起详细 HUD 与全局账本面板 |
-| **左键长按（≥ 260ms）并拖动** | 自由移动到当前屏或副屏任意位置（带边缘与任务栏磁吸） |
-| **拖动时按住 `Alt`** | 临时关闭磁吸，进行像素级微调 |
-| **右键点击胶囊** | 锁定位置、重置到默认任务栏位置、切换中/英、释存清理、开关开机自启、退出 |
-| **点击顶栏 `EN` / `ZH`** | 实时切换英文 / 简体中文界面 |
-| **按 `Esc` 或点击空白处** | 收起已展开的面板 |
+| **左键点一下胶囊** | 展开 / 收起详情面板（不抢反重力焦点） |
+| **左键长按（≥ 0.3 秒）拖动** | 自由拖到当前屏或副屏任意位置（靠近边缘自动磁吸，按住 `Alt` 精调） |
+| **右键点击胶囊** | 切 3 档胶囊宽度、切跟随系统/浅色/深色、锁定位置、归位、切中英文、开关开机自启、退出 |
+| **点击顶栏 `EN` / `ZH`** | 实时切换中英文界面 |
 
 ---
 
-## 工作原理与透明说明（Operational Transparency）
+## 安全与工作原理（全透明）
 
-仓库全部为纯明文 C# 源码（零二进制黑盒），所有行为透明可审计：
-
-1. **纯本地只读日志解析（0 外联、0 改包）**：
-   - 仅只读解析本机 Antigravity 标准会话目录：
-     - `%USERPROFILE%\.gemini\antigravity\brain\`
-     - `%USERPROFILE%\.gemini\antigravity-insiders\brain\`
-     - `%USERPROFILE%\.gemini\antigravity-cli\brain\`
-   - 采用文件 `mtime` + 增量偏移读取，空闲时磁盘与 CPU 开销极低。
-   - **不发起任何网络请求**，不读取任何账号凭据、Cookie 或 API Key，不修改客户端 `app.asar` 或可执行文件。
-2. **窗口联动与多屏全屏避让**：
-   - 通过标准 Win32 `SetWinEventHook(EVENT_SYSTEM_FOREGROUND)` 与 `GetWindowText` 感知当前活跃的 Antigravity 窗口实现自动切窗。
-   - 仅当胶囊**当前所在的显示器**出现独占全屏程序时才自动隐藏，副屏看视频不影响主屏显示。
-3. **副作用全部默认关闭（Opt-In Only）**：
-   - **配置文件**：仅保存在 `%LOCALAPPDATA%\AntigravityHUD\config.json`。
-   - **开机自启**：默认关闭，仅在传 `-Autostart` 或右键勾选「开机自动启动」时写入当前用户的 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`。
-   - **自动省存与缓存清理**：「省存」开关默认 **`关`**；仅在用户主动开启或手动点击「清缓存 / 释存」时，才清理 Antigravity 目录下的 `tempmediaStorage` 与 `crashes` 临时文件，并调用标准 Win32 `EmptyWorkingSet` 修剪工作集。**绝不终止任何进程，绝不删除任何对话日志**。
-4. **平台边界**：
-   - 主仓当前专注 **Windows 10 / 11** 原生 Win32 体验（依赖分层窗口与任务栏外壳 API）；欢迎 macOS 开发者参考下方说明一起共创原生 Swift 菜单栏版。
+- **纯本地只读，0 网络请求**：只读本机 `~/.gemini/antigravity*/brain/` 下的对话日志（支持主端、Insiders、CLI），增量读取，空闲 CPU 低于 `0.2%`。不发任何网络请求，不读浏览器 Cookie、OAuth Token 或 API Key，不修改客户端任何文件。
+- **不模拟按键、不杀进程**：「快捷指令」页只做剪贴板复制；「自动省存 / 清缓存」默认关闭，仅在你主动点击或开启时清理 Antigravity 的 `tempmediaStorage` / `crashes` 临时文件并调用系统 `EmptyWorkingSet`，绝不杀任何进程、绝不删对话记录。
+- **配置文件位置**：仅保存在 `%LOCALAPPDATA%\AntigravityHUD\config.json`。
+- **可选扩展：离线外部 API 费用账本（默认隐藏）**：如果你同时用外部付费 API，往 `%USERPROFILE%\.gemini\data\paid_api_ledger.jsonl` 追加 `{"date":"2026-11-27","model":"gemini-omni-1.2-flash","kind":"video","cost_usd":0.42}`，底栏会自动显示今日/本月开销；无此文件时完全隐藏，绝不碰任何密钥。
 
 ---
 
 ## 关于 macOS / 诚邀原生版共创
 
-目前主仓库专注把 **Windows 10 / 11** 的 Win32 原生悬浮体验打磨到位。因为手头没有 Mac 真机，不希望在没法真机实测的情况下盲写半成品，所以没有强行套 Electron 做跨平台。
+目前主仓库专注把 **Windows 10 / 11** 原生体验打磨到位。因为手头没有 Mac 真机，不想在没法真机实测的情况下云写半成品，也没有为了跨平台硬套一层 Electron。
 
 如果你是 macOS 用户，同样喜欢保持官方 Antigravity 客户端一尘不染，非常欢迎一起共创 **原生 Swift 菜单栏版（Menu Bar + Popover）**：
 
-- **日志与数据结构可直接复用**：macOS 端本地会话目录同样在 `~/.gemini/antigravity*/brain/`，增量解析与统计逻辑可直接参考 [TelemetryEngine.cs](src/TelemetryEngine.cs) 与 [Models.cs](src/Models.cs)。
-- **唯一共同约定**：不改客户端文件、不塞插件、纯本地 0 外联、不碰账号凭据、尽量原生轻量。
-- **两种共创方式都欢迎**：
-  1. 直接向本仓库提交 PR（放到独立的 `macos/` 目录）；
-  2. 或者你单独维护一个 macOS 仓库，发 Issue 告诉我，实测通过后会直接挂到本页顶部作为官方推荐的 macOS 姊妹版。
+- **日志路径与解析逻辑通用**：macOS 端本地会话目录同样在 `~/.gemini/antigravity*/brain/`，解析与统计逻辑可直接参考 [TelemetryEngine.cs](src/TelemetryEngine.cs) 和 [Models.cs](src/Models.cs)。
+- **共同约定**：不改客户端、不插插件、纯本地 0 外联、不碰账号凭据、尽量原生轻量。
+- **参与方式**：欢迎在 [Issue #1](https://github.com/CHANPAJN/antigravity-hud/issues/1) 留言，直接给本仓库提 `macos/` PR 或单独建库都可以，实测通过后会直接置顶挂到本页顶部推荐。
 
 ---
 
-## 可选进阶：外部付费 API 离线费用账本（绝不碰密钥）
-
-如果你在使用 Antigravity 订阅的同时，还通过自有 API Key 调用外部付费接口（例如 Gemini API 生图/生视频/TTS 或自定义脚本），Antigravity HUD 支持在底栏右侧**按需自动显示当日与本月 API 费用**——**默认完全隐藏**，100% 纯本地只读，绝不读取任何 API Key、不发起任何网络请求。
-
-只需让你的调用脚本向 `%USERPROFILE%\.gemini\data\paid_api_ledger.jsonl` 追加一行 JSON 记录：
-
-```json
-{"date":"2026-11-27","model":"gemini-omni-1.2-flash","kind":"video","cost_usd":0.42}
-```
-
-可选字段：`op_id`（幂等去重）、`ts`（时间戳）、`cid`（关联到对应会话 ID 显示单窗消耗）。若本机无此文件，底栏自动隐藏不占任何版面。
-
----
-
-## 本地编译与自动化校验
+## 本地自检
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tests\verify.ps1
 ```
 
-自动校验零依赖源码编译、配置文件持久化测试（`--test-config`）以及中英双语脱敏离屏渲染输出。
+## 开源协议与社区
 
----
-
-## 开源协议
-
-基于 **GPL-3.0-only** 协议开源，完整条款见 [LICENSE](LICENSE)。
+- 本项目基于 **GPL-3.0-only** 协议完整开源，见 [LICENSE](LICENSE)。
+- 首发交流与反馈社区：[LINUX DO](https://linux.do)（真诚、友善、团结、专业）。

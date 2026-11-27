@@ -46,13 +46,9 @@ It runs as a standalone ~236 KB native Windows app that sits in an open spot on 
 
 ## How to Use
 
-### Option 1: Download Prebuilt Binary
+### Option 1: Audit Source with AI & Compile Locally in ~1s (Recommended)
 
-Grab `AntigravityHUD.exe` (plus `SHA256SUMS.txt`) from [GitHub Releases](https://github.com/CHANPAJN/antigravity-hud/releases) and double-click to run. No runtime install required.
-
-### Option 2: Compile Locally in ~1 Second (Zero Dependencies)
-
-Windows 10 / 11 already ships with `csc.exe` (.NET Framework 4.x). You do **not** need Visual Studio, .NET SDK, or Node.js — all 14 plain C# files live under `src/`:
+Windows 10 / 11 already ships with `csc.exe` (.NET Framework 4.x) — **no Visual Studio, .NET SDK, or Node.js required**. Hand the 14 plain C# files under `src/` to Antigravity (or your preferred AI) to audit first, then let it compile locally or double-click `build.cmd`:
 
 ```powershell
 git clone https://github.com/CHANPAJN/antigravity-hud.git
@@ -65,7 +61,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Autostart
 ```
 
-Or double-click `build.cmd` to build a portable `dist\AntigravityHUD.exe`.
+Or double-click `build.cmd` to build a standalone portable `dist\AntigravityHUD.exe`.
+
+### Option 2: Download GitHub Actions Prebuilt Binary
+
+Prefer not to compile locally? Download `AntigravityHUD.exe` (plus `SHA256SUMS.txt`, built on GitHub-hosted `windows-latest` runners) from [GitHub Releases](https://github.com/CHANPAJN/antigravity-hud/releases).
 
 ### Clean Uninstall
 

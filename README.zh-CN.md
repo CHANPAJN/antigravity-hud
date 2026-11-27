@@ -44,15 +44,11 @@
 
 ---
 
-## 怎么用？（30 秒上手）
+## 怎么用？（推荐先审源码再本地自编）
 
-### 方式一：直接下载运行（最省事）
+### 方式一：让 AI 审完源码，1 秒本地自编（最放心）
 
-去 [GitHub Releases](https://github.com/CHANPAJN/antigravity-hud/releases) 下载 `AntigravityHUD.exe`（由本仓库 GitHub Actions 自动编译，附 `SHA256SUMS.txt`），双击直接跑，不需要安装任何运行库。
-
-### 方式二：自己从源码 1 秒编译（不放心 exe 就自己编）
-
-Windows 10 / 11 自带 `.NET Framework 4.x` 编译器（`csc.exe`），**不用装 Visual Studio、.NET SDK 或 Node.js**，全部 14 个明文 `.cs` 文件就在 `src/` 目录里：
+Windows 10 / 11 自带 `.NET Framework 4.x` 编译器（`csc.exe`），**不用装 Visual Studio、.NET SDK 或 Node.js**。仓库里一共就 14 个纯明文 `.cs` 文件，直接把仓库丢给你的 Antigravity / AI 审一遍源码确认干净后，让它直接编译运行（或自己双击 `build.cmd`）：
 
 ```powershell
 git clone https://github.com/CHANPAJN/antigravity-hud.git
@@ -65,7 +61,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Autostart
 ```
 
-也可以直接双击根目录的 `build.cmd`，1 秒编出绿色单文件 `dist\AntigravityHUD.exe`。
+也可以直接双击根目录 `build.cmd`，1 秒编出绿色单文件 `dist\AntigravityHUD.exe`。
+
+### 方式二：直接下载 GitHub Actions 自动构建版
+
+如果懒得本地编译，也可以去 [GitHub Releases](https://github.com/CHANPAJN/antigravity-hud/releases) 直接下载由 GitHub 官方 `windows-latest` 流水线自动编出的 `AntigravityHUD.exe`（附 `SHA256SUMS.txt`）。
 
 ### 干净卸载
 

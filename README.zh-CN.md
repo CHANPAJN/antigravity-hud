@@ -8,18 +8,20 @@
 [![开源协议: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-2563EB?style=flat-square)](LICENSE)
 [![零第三方依赖](https://img.shields.io/badge/Dependencies-0%20(Windows%20自带%20csc.exe)-10B981?style=flat-square)](#快速开始)
 
-> **仅支持 Windows 10 / 11 · 唯一目的：不改客户端** — 做一个独立外置小工具的**唯一初衷**，就是为了完整保留 Google Antigravity 官方客户端的一尘不染：**绝不修改客户端文件、绝不往界面塞插件、纯本地 0 外联、绝不碰账号凭据**。纯 C# Win32 原生编写，约 225 KB，零第三方依赖。
+> **仅支持 Windows 10 / 11 · 唯一目的：不改客户端** — 做一个独立外置小工具的**唯一初衷**，就是为了完整保留 Google Antigravity 官方客户端的一尘不染：**绝不修改客户端文件、绝不往界面塞插件、纯本地 0 外联、绝不碰账号凭据**。纯 C# Win32 原生编写，约 236 KB，零第三方依赖。
 
 <p align="center">
   <img src="docs/preview-bar-zh.png" alt="任务栏悬浮胶囊（默认浅色）" width="320" />
 </p>
 
 <p align="center">
-  <img src="docs/preview-hud-zh.png" alt="窗口 HUD 视图（默认浅色）" width="40%" />
+  <img src="docs/preview-hud-zh.png" alt="窗口 HUD 视图（默认浅色）" width="28%" />
   &nbsp;
-  <img src="docs/preview-ledger-zh.png" alt="全局账本视图（默认浅色）" width="40%" />
+  <img src="docs/preview-ledger-zh.png" alt="全局账本视图（默认浅色）" width="28%" />
   &nbsp;
-  <img src="docs/preview-menu-zh.png" alt="现代圆角右键菜单" width="16%" />
+  <img src="docs/preview-commands-zh.png" alt="官方快捷指令页（默认浅色）" width="28%" />
+  &nbsp;
+  <img src="docs/preview-menu-zh.png" alt="现代圆角右键菜单" width="13%" />
 </p>
 
 <p align="center">
@@ -49,6 +51,9 @@
 - **全局账本（纯本地离线多周期统计）**
   - 基于本地会话日志汇总 `今日` / `昨日` / `7天` / `30天` / `全部` 消耗。
   - 内置近 7 日可交互柱状图、按主力模型 / 按会话任务排行（自动合并关联子任务）、点击模型行下钻分析各对话与高频工具分布。
+- **快捷指令（官方斜杠命令 · 纯剪贴板复制零侵入）**
+  - 第 3 页收纳全部官方斜杠命令（`/btw`、`/compact`、`/goal`、`/teamwork`、`/boost`、`/plan`、`/grill-me`、`/browser`、`/schedule`、`/learn`），免切中英输入法、免背英文拼写。
+  - **严格只写系统剪贴板、绝不做模拟按键注入**：点一下即复制并自动收起交回焦点，按 `Ctrl+V` 即可使用；当上下文占用达到 `≥ 75%` 时自动联动提醒 `/compact` 一键折叠。
 - **中英双语（自动跟随系统 + 一键热切）**
   - 首次启动自动识别 Windows 系统语言，面板顶栏与右键菜单均可一键切换 `简体中文 / English`。
 - **可选内存与临时缓存辅助（默认全关）**

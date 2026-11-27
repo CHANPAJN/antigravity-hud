@@ -8,18 +8,20 @@ English | [简体中文](README.zh-CN.md)
 [![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-2563EB?style=flat-square)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-0%20(Built--in%20csc.exe)-10B981?style=flat-square)](#quick-start)
 
-> **Windows Only · Built for One Single Purpose: Never Touch the Client** — The **only reason** this tool exists as an external overlay is to keep your official Google Antigravity client **100% intact and spotless**: zero `app.asar` patching, zero injected UI panels, zero IDE extensions, zero network calls, and zero credential access. Pure C# Win32 (~225 KB), zero third-party dependencies.
+> **Windows Only · Built for One Single Purpose: Never Touch the Client** — The **only reason** this tool exists as an external overlay is to keep your official Google Antigravity client **100% intact and spotless**: zero `app.asar` patching, zero injected UI panels, zero IDE extensions, zero network calls, and zero credential access. Pure C# Win32 (~236 KB), zero third-party dependencies.
 
 <p align="center">
   <img src="docs/preview-bar.png" alt="Floating Taskbar Capsule (Default Light)" width="320" />
 </p>
 
 <p align="center">
-  <img src="docs/preview-hud.png" alt="Window HUD View (Default Light)" width="40%" />
+  <img src="docs/preview-hud.png" alt="Window HUD View (Default Light)" width="28%" />
   &nbsp;
-  <img src="docs/preview-ledger.png" alt="Global Ledger View (Default Light)" width="40%" />
+  <img src="docs/preview-ledger.png" alt="Global Ledger View (Default Light)" width="28%" />
   &nbsp;
-  <img src="docs/preview-menu.png" alt="Modern Right-Click Flyout Menu" width="16%" />
+  <img src="docs/preview-commands.png" alt="Official Slash Commands Tab (Default Light)" width="28%" />
+  &nbsp;
+  <img src="docs/preview-menu.png" alt="Modern Right-Click Flyout Menu" width="13%" />
 </p>
 
 <p align="center">
@@ -49,6 +51,9 @@ English | [简体中文](README.zh-CN.md)
 - **Global Ledger (Offline Multi-Day Analytics)**
   - Aggregates local transcript logs across `Today`, `Yesterday`, `7 Days`, `30 Days`, and `All` views.
   - Interactive 7-day bar chart, model breakdown with click-to-drill-down diagnostics, conversation rankings (including subagent totals), and top tool call statistics.
+- **Quick Commands (Official Slash Commands · Clipboard Only)**
+  - Dedicated 3rd tab listing official Antigravity slash commands (`/btw`, `/compact`, `/goal`, `/teamwork`, `/boost`, `/plan`, `/grill-me`, `/browser`, `/schedule`, `/learn`) with bilingual descriptions.
+  - **Pure clipboard copy only** (never simulates keystrokes or injects into the client): click once to copy, auto-hides smoothly so focus returns to Antigravity for instant `Ctrl+V`. Dynamically highlights `/compact` when context usage reaches `≥ 75%`.
 - **Bilingual UI (`EN` / `中文`)**
   - Automatically follows Windows UI language on first launch and switches live between English and Simplified Chinese with one click in the top bar or context menu.
 - **Optional Memory Helper (Opt-In Only)**

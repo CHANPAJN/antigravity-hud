@@ -16,7 +16,8 @@ namespace AntigravityHud
     internal enum MainTab
     {
         WindowHud = 0,
-        GlobalLedger = 1
+        GlobalLedger = 1,
+        QuickCommands = 2
     }
 
     internal enum ScaleMode

@@ -189,7 +189,9 @@ namespace AntigravityHud
 
                 MainTab tab = (mode.StartsWith("ledger", StringComparison.Ordinal) || mode == "drill" || mode == "drill_turns")
                     ? MainTab.GlobalLedger
-                    : MainTab.WindowHud;
+                    : (mode.StartsWith("cmd", StringComparison.Ordinal) || mode.StartsWith("commands", StringComparison.Ordinal)
+                        ? MainTab.QuickCommands
+                        : MainTab.WindowHud);
 
                 Func<string, PeriodTab, ModelDrilldownData> drillCb = useDemo
                     ? (Func<string, PeriodTab, ModelDrilldownData>)DemoDataFactory.BuildDemoDrilldown

@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace AntigravityHud
 {
-    internal sealed class TrayPopupForm : Form
+    internal sealed partial class TrayPopupForm : Form
     {
         private sealed class DrillRowHit
         {
@@ -69,6 +69,7 @@ namespace AntigravityHud
         private Rectangle _rcRefreshBtn;
         private Rectangle _rcTabHud;
         private Rectangle _rcTabLedger;
+        private Rectangle _rcTabCommands;
         private readonly Rectangle[] _rcPeriodBtns = new Rectangle[5];
         private readonly List<KeyValuePair<Rectangle, int>> _dayBarClickHits = new List<KeyValuePair<Rectangle, int>>();
         private readonly List<KeyValuePair<Rectangle, string>> _dayBarHoverHits = new List<KeyValuePair<Rectangle, string>>();
@@ -257,10 +258,12 @@ namespace AntigravityHud
             {
                 if (!_suppressDeactivate)
                 {
+                    ResetQuickCommandsCopyState();
                     _lastDeactivateTick = Environment.TickCount;
                     Hide();
                 }
             };
+            InitQuickCommandsState();
             KeyDown += (s, e) =>
             {
                 if (e.KeyCode == Keys.Escape)
@@ -631,6 +634,15 @@ namespace AntigravityHud
                 }
             }
 
+            else if (_activeTab == MainTab.QuickCommands)
+            {
+                string cmdTip;
+                if (HandleQuickCommandsMouseMove(e.Location, out cmdTip))
+                {
+                    newHover = cmdTip;
+                }
+            }
+
             bool hand = _rcConvPicker.Contains(e.Location) ||
                         _rcScaleBtn.Contains(e.Location) ||
                         _rcLangBtn.Contains(e.Location) ||
@@ -638,6 +650,8 @@ namespace AntigravityHud
                         _rcPosHintBar.Contains(e.Location) ||
                         _rcTabHud.Contains(e.Location) ||
                         _rcTabLedger.Contains(e.Location) ||
+                        _rcTabCommands.Contains(e.Location) ||
+                        (_activeTab == MainTab.QuickCommands && !string.IsNullOrEmpty(newHover)) ||
                         _rcAutoGcBtn.Contains(e.Location) ||
                         _rcCleanMemBtn.Contains(e.Location) ||
                         (_activeTab == MainTab.WindowHud && (
@@ -891,6 +905,7 @@ namespace AntigravityHud
             }
             if (_rcTabHud.Contains(e.Location))
             {
+                ResetQuickCommandsCopyState();
                 _activeTab = MainTab.WindowHud;
                 _hoverHint = "";
                 Invalidate();
@@ -898,6 +913,7 @@ namespace AntigravityHud
             }
             if (_rcTabLedger.Contains(e.Location))
             {
+                ResetQuickCommandsCopyState();
                 if (_activeTab == MainTab.GlobalLedger && !string.IsNullOrEmpty(_drillModelName))
                 {
                     ExitModelDrilldown();
@@ -907,6 +923,13 @@ namespace AntigravityHud
                 _hoverHint = "";
                 if (!string.IsNullOrEmpty(_drillModelName))
                     RefreshDrilldownIfActive();
+                Invalidate();
+                return;
+            }
+            if (_rcTabCommands.Contains(e.Location))
+            {
+                _activeTab = MainTab.QuickCommands;
+                _hoverHint = "";
                 Invalidate();
                 return;
             }
@@ -1034,6 +1057,11 @@ namespace AntigravityHud
                         }
                     }
                 }
+            }
+            if (_activeTab == MainTab.QuickCommands)
+            {
+                if (HandleQuickCommandsMouseClick(e.Location))
+                    return;
             }
             if (_activeTab == MainTab.GlobalLedger)
             {
@@ -1290,6 +1318,7 @@ namespace AntigravityHud
         {
             if (disposing)
             {
+                DisposeQuickCommandsState();
                 if (_convMenu != null && !_convMenu.IsDisposed) _convMenu.Dispose();
                 if (_convMenuFont != null) { _convMenuFont.Dispose(); _convMenuFont = null; }
             }
@@ -1431,11 +1460,13 @@ namespace AntigravityHud
                 Color segActBd = Pal.IsDark ? Color.FromArgb(76, 76, 86) : ColCardBorder;
                 FillRoundCard(g, rcSegWrap, S(9), segWrapBg, ColCardBorder);
 
-                int badgeW = I18n.IsZh ? S(108) : S(116);
+                int badgeW = I18n.IsZh ? S(86) : S(78);
                 int tabAreaW = contentW - badgeW - S(10);
-                int halfTab = (tabAreaW - S(6)) / 2;
-                _rcTabHud = new Rectangle(pad + S(3), y + S(3), halfTab, navWrapH - S(6));
-                _rcTabLedger = new Rectangle(_rcTabHud.Right + S(4), y + S(3), halfTab, navWrapH - S(6));
+                int thirdTab = (tabAreaW - S(10)) / 3;
+                _rcTabHud = new Rectangle(pad + S(3), y + S(3), thirdTab, navWrapH - S(6));
+                _rcTabLedger = new Rectangle(_rcTabHud.Right + S(3), y + S(3), thirdTab, navWrapH - S(6));
+                _rcTabCommands = new Rectangle(_rcTabLedger.Right + S(3), y + S(3),
+                    (pad + tabAreaW) - (_rcTabLedger.Right + S(3)), navWrapH - S(6));
 
                 if (_activeTab == MainTab.WindowHud)
                     FillRoundCard(g, _rcTabHud, S(6), segActBg, segActBd);
@@ -1447,14 +1478,24 @@ namespace AntigravityHud
                 else if (_rcTabLedger.Contains(_mousePt))
                     FillRoundCard(g, _rcTabLedger, S(6), ColHoverFill, ColCardBorder);
 
+                if (_activeTab == MainTab.QuickCommands)
+                    FillRoundCard(g, _rcTabCommands, S(6), segActBg, segActBd);
+                else if (_rcTabCommands.Contains(_mousePt))
+                    FillRoundCard(g, _rcTabCommands, S(6), ColHoverFill, ColCardBorder);
+
                 DrawCenteredText(g, I18n.T("窗口 HUD", "Window HUD"), _activeTab == MainTab.WindowHud ? fBodyBold : fBody, _activeTab == MainTab.WindowHud ? ColTextMain : ColTextSub, _rcTabHud);
-                DrawCenteredText(g, I18n.T("全局账本", "Global Ledger"), _activeTab == MainTab.GlobalLedger ? fBodyBold : fBody, _activeTab == MainTab.GlobalLedger ? ColTextMain : ColTextSub, _rcTabLedger);
+                DrawCenteredText(g, I18n.T("全局账本", "Ledger"), _activeTab == MainTab.GlobalLedger ? fBodyBold : fBody, _activeTab == MainTab.GlobalLedger ? ColTextMain : ColTextSub, _rcTabLedger);
+                DrawCenteredText(g, I18n.T("快捷指令", "Commands"), _activeTab == MainTab.QuickCommands ? fBodyBold : fBody, _activeTab == MainTab.QuickCommands ? ColTextMain : ColTextSub, _rcTabCommands);
 
                 var rcSafe = new Rectangle(rcSegWrap.Right - badgeW - S(4), y + S(4), badgeW, navWrapH - S(8));
                 FillRoundCard(g, rcSafe, S(12), ColOkSoft, ColOkBorder);
-                DrawStatusDot(g, rcSafe.Left + S(11), rcSafe.Top + rcSafe.Height / 2, S(6), ColOk, false);
-                DrawTxtL(g, I18n.T("纯本地·0外联", "Local · Offline"), fMetaBold, ColOkText,
-                    new Rectangle(rcSafe.Left + S(19), rcSafe.Top, rcSafe.Width - S(22), rcSafe.Height));
+                string safeTxt = I18n.T("本地·离线", "Offline");
+                int safeTxtW = MeasureTxtW(g, safeTxt, fMetaBold);
+                int safeTotalW = S(6) + S(5) + safeTxtW;
+                int safeStartX = rcSafe.Left + Math.Max(S(7), (rcSafe.Width - safeTotalW) / 2);
+                DrawStatusDot(g, safeStartX + S(3), rcSafe.Top + rcSafe.Height / 2, S(6), ColOk, false);
+                DrawTxtL(g, safeTxt, fMetaBold, ColOkText,
+                    new Rectangle(safeStartX + S(10), rcSafe.Top, rcSafe.Right - (safeStartX + S(10)) - S(4), rcSafe.Height));
 
                 y += navWrapH + S(8);
 
@@ -1463,7 +1504,7 @@ namespace AntigravityHud
                 int opsBarH = S(32);
                 int bodyAvailH = Height - y - pad - footerH - opsBarH - S(12);
 
-                // ================= 3. TAB BODY (CLEAN TWO-CARD HUD OR LEDGER) =================
+                // ================= 3. TAB BODY (CLEAN TWO-CARD HUD, LEDGER OR QUICK COMMANDS) =================
                 string curHudKey = hud != null ? hud.Key : "";
                 if (curHudKey != _lastHudScrollKey)
                 {
@@ -1495,13 +1536,21 @@ namespace AntigravityHud
                     DrawWindowHudBody(g, pad, y, contentW, bodyAvailH, hud, budget,
                         fTitle, fBodyBold, fBody, fMeta, fMetaBold, fBodyBold, fBody, fHero);
                 }
-                else
+                else if (_activeTab == MainTab.GlobalLedger)
                 {
                     _lastTreemapCells.Clear();
                     _turnRowHits.Clear();
                     _hoveredTurnItem = null;
                     DrawGlobalLedgerBody(g, pad, y, contentW, bodyAvailH,
                         fTitle, fBodyBold, fBody, fMeta, fMetaBold, fMetaBold, fMeta, fHero);
+                }
+                else
+                {
+                    _lastTreemapCells.Clear();
+                    _turnRowHits.Clear();
+                    _hoveredTurnItem = null;
+                    DrawQuickCommandsBody(g, pad, y, contentW, bodyAvailH, hud, budget,
+                        fTitle, fBodyBold, fBody, fMeta, fMetaBold);
                 }
 
                 // ================= 4. UNIFIED COMPACT MEM GUARD + API BAR & FOOTER =================

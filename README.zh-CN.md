@@ -8,18 +8,23 @@
 [![开源协议: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-2563EB?style=flat-square)](LICENSE)
 [![零第三方依赖](https://img.shields.io/badge/Dependencies-0%20(Windows%20自带%20csc.exe)-10B981?style=flat-square)](#快速开始)
 
-> **仅支持 Windows 10 / 11 · 保持客户端一尘不染** — 做成独立外置工具的初衷，就是为了**完整保留官方 Google Antigravity 客户端的纯净，不往界面塞插件、不改任何客户端文件**。纯 C# Win32 原生编写，约 218 KB，零第三方依赖。
+> **仅支持 Windows 10 / 11 · 唯一目的：不改客户端** — 做一个独立外置小工具的**唯一初衷**，就是为了完整保留 Google Antigravity 官方客户端的一尘不染：**绝不修改客户端文件、绝不往界面塞插件、纯本地 0 外联、绝不碰账号凭据**。纯 C# Win32 原生编写，约 225 KB，零第三方依赖。
 
 <p align="center">
-  <img src="docs/preview-bar-zh.png" alt="任务栏悬浮胶囊" width="320" />
+  <img src="docs/preview-bar-zh.png" alt="任务栏悬浮胶囊（默认浅色）" width="320" />
 </p>
 
 <p align="center">
-  <img src="docs/preview-hud-zh.png" alt="窗口 HUD 视图" width="40%" />
+  <img src="docs/preview-hud-zh.png" alt="窗口 HUD 视图（默认浅色）" width="40%" />
   &nbsp;
-  <img src="docs/preview-ledger-zh.png" alt="全局账本视图" width="40%" />
+  <img src="docs/preview-ledger-zh.png" alt="全局账本视图（默认浅色）" width="40%" />
   &nbsp;
   <img src="docs/preview-menu-zh.png" alt="现代圆角右键菜单" width="16%" />
+</p>
+
+<p align="center">
+  <img src="docs/preview-dark-box-zh.png" alt="原生暗黑模式预览小框" width="68%" /><br/>
+  <sub>上方为默认清爽浅色模式 · 同时内置原生深色模式（默认自动跟随 Windows 任务栏与应用深浅主题，右键菜单可随时切换 <code>跟随系统 / 浅色 / 深色</code>）。</sub>
 </p>
 
 ---
@@ -31,7 +36,9 @@
   - **智能寻空位默认停靠**：自动识别 Windows 11 居中任务栏 / 左对齐任务栏及天气小组件开关——Win11 居中任务栏优先停靠**左侧空闲区**（避开右下角拥挤的托盘通知）；Win10 或左对齐任务栏自动寻找右侧空位；**小屏笔记本任务栏空隙不足时自动上浮至任务栏正上方**，绝不遮挡任务栏图标。
   - **短按左键**：原地展开 / 收起详细 HUD 与账本面板，不抢占 Antigravity 输入焦点。
   - **长按（≥ 260ms）或拖动**：可将胶囊自由移动到屏幕任意位置或任意副屏显示器。
-  - **现代 Win11 圆角右键菜单**：内置三段式胶囊宽度实时切换（`极致短 / 干练 / 带标签`）、锁定位置滑块开关、一键归位、中英切换、开机自启开关与日志目录直达。
+  - **现代 Win11 圆角右键菜单**：内置三段式胶囊宽度切换（`极致短 / 干练 / 带标签`）与三段式外观主题切换（`跟随系统 / 浅色 / 深色`）、锁定位置滑块开关、一键归位、中英切换、开机自启开关与日志目录直达。
+- **原生浅色 / 暗黑双主题**
+  - 默认 **`跟随系统`**（实时监听 Windows 任务栏与应用深浅主题切换：胶囊跟随任务栏深浅，面板与菜单跟随应用深浅），暗黑模式采用中性石墨灰，拒绝刺眼深蓝霓虹；也可在右键菜单随时手动锁定浅色或深色。
   - **智能边缘与任务栏磁吸**：拖动时自动吸附屏幕四边及 Windows 任务栏垂直中轴线（按住 `Alt` 拖动可临时关闭磁吸精调）。
   - **左右锚点防漂移**：自动记录停靠在屏幕左半区或右半区并持久化到 `%LOCALAPPDATA%\AntigravityHUD\config.json`，当胶囊文字动态伸缩时保持贴边不漂移、不出屏。
   - **弹窗四向智能避让**：默认向胶囊上方展开；若胶囊被拖至屏幕顶部，面板自动向下方翻转展开，并自适应所在显示器工作区边界。

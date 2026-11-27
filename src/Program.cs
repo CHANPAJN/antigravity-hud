@@ -80,13 +80,14 @@ namespace AntigravityHud
                 Language = "en",
                 AutoMemoryGuard = false,
                 ScaleMode = "auto",
-                BarStyle = "minimal"
+                BarStyle = "minimal",
+                ThemeMode = "dark"
             };
             ConfigStore.Save(cfg);
             UserConfig loaded = ConfigStore.Load();
             if (loaded.AnchorMode != "custom" || loaded.CustomX != 1280 || loaded.CustomY != 24 ||
                 loaded.HorizontalAlign != "right" || loaded.Language != "en" || loaded.AutoMemoryGuard ||
-                loaded.BarStyle != "minimal")
+                loaded.BarStyle != "minimal" || loaded.ThemeMode != "dark")
             {
                 Environment.Exit(2);
             }
@@ -102,6 +103,7 @@ namespace AntigravityHud
                 string mode = args.Length >= 3 && !args[2].StartsWith("--", StringComparison.Ordinal) ? args[2] : "hud";
                 bool useDemo = false;
                 string langArg = "auto";
+                string themeArg = "";
                 string reqConv = "";
 
                 for (int i = 2; i < args.Length; i++)
@@ -114,6 +116,10 @@ namespace AntigravityHud
                     {
                         langArg = args[++i];
                     }
+                    else if (args[i] == "--theme" && i + 1 < args.Length)
+                    {
+                        themeArg = args[++i];
+                    }
                     else if (args[i] == "--conv" && i + 1 < args.Length)
                     {
                         reqConv = args[++i];
@@ -121,9 +127,20 @@ namespace AntigravityHud
                 }
 
                 I18n.SetLanguage(langArg);
+                // Default demo preview renders crisp Light theme unless --theme dark is explicitly requested
+                if (!string.IsNullOrEmpty(themeArg))
+                    ThemeManager.SetPreviewOverride(themeArg);
+                else if (useDemo)
+                    ThemeManager.SetPreviewOverride("light");
+
                 float dpi = NativeMethods.GetSystemDpiScale();
                 string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                var cfg = new UserConfig { Language = langArg, AnchorMode = mode == "hud_custom_pos" ? "custom" : "taskbar-auto" };
+                var cfg = new UserConfig
+                {
+                    Language = langArg,
+                    AnchorMode = mode == "hud_custom_pos" ? "custom" : "taskbar-auto",
+                    ThemeMode = string.IsNullOrEmpty(themeArg) ? "auto" : themeArg
+                };
 
                 LocalTelemetryEngine eng = useDemo ? null : new LocalTelemetryEngine(profile, false);
                 DashboardData d = useDemo
@@ -132,8 +149,15 @@ namespace AntigravityHud
 
                 if (mode == "menu")
                 {
-                    var mCfg = new UserConfig { Language = langArg, AnchorMode = "custom", BarStyle = "compact", PositionLocked = false };
-                    using (var menuFrm = new ModernContextMenuForm(dpi, mCfg, null, null, null, null, null, null, null, () => false))
+                    var mCfg = new UserConfig
+                    {
+                        Language = langArg,
+                        AnchorMode = "custom",
+                        BarStyle = "compact",
+                        PositionLocked = false,
+                        ThemeMode = string.Equals(themeArg, "dark", StringComparison.OrdinalIgnoreCase) ? "dark" : "auto"
+                    };
+                    using (var menuFrm = new ModernContextMenuForm(dpi, mCfg, null, null, null, null, null, null, null, null, () => false))
                     {
                         menuFrm.RenderOffscreenToPng(outPng);
                     }

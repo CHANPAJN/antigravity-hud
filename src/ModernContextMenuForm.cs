@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -10,14 +9,15 @@ namespace AntigravityHud
 {
     /// <summary>
     /// Modern Win11-style owner-drawn floating context menu for the capsule bar.
-    /// Features inline 3-way bar width segmented control, crisp vector icons,
-    /// iOS/Win11-style toggles, and native DWM rounded corners.
+    /// Features inline 3-way bar width & theme segmented controls, crisp vector icons,
+    /// pill toggles, and native DWM rounded corners in both Light & Dark themes.
     /// </summary>
     internal sealed class ModernContextMenuForm : Form
     {
         private readonly float _dpi;
         private readonly UserConfig _config;
         private readonly Action<string> _onSetBarStyle;
+        private readonly Action<string> _onSetThemeMode;
         private readonly Action _onToggleLockPos;
         private readonly Action _onResetPos;
         private readonly Action _onToggleLang;
@@ -29,8 +29,8 @@ namespace AntigravityHud
         private bool _dwmRoundedApplied;
         private Point _mousePt = new Point(-1, -1);
 
-        // Hit rectangles
         private readonly Rectangle[] _rcStyleSegs = new Rectangle[3];
+        private readonly Rectangle[] _rcThemeSegs = new Rectangle[3];
         private Rectangle _rcLockRow;
         private Rectangle _rcResetRow;
         private Rectangle _rcLangRow;
@@ -38,24 +38,11 @@ namespace AntigravityHud
         private Rectangle _rcLogsRow;
         private Rectangle _rcExitRow;
 
-        private static readonly Color ColBg = Color.FromArgb(255, 255, 255);
-        private static readonly Color ColBorder = Color.FromArgb(218, 223, 231);
-        private static readonly Color ColSep = Color.FromArgb(236, 239, 244);
-        private static readonly Color ColSubtle = Color.FromArgb(241, 244, 248);
-        private static readonly Color ColHover = Color.FromArgb(236, 242, 252);
-        private static readonly Color ColText = Color.FromArgb(24, 24, 27);
-        private static readonly Color ColSub = Color.FromArgb(113, 113, 122);
-        private static readonly Color ColMuted = Color.FromArgb(161, 161, 170);
-        private static readonly Color ColAccent = Color.FromArgb(37, 99, 235);
-        private static readonly Color ColAccentSoft = Color.FromArgb(232, 240, 254);
-        private static readonly Color ColOk = Color.FromArgb(16, 185, 129);
-        private static readonly Color ColDanger = Color.FromArgb(220, 38, 38);
-        private static readonly Color ColDangerSoft = Color.FromArgb(254, 242, 242);
-
         public ModernContextMenuForm(
             float dpiScale,
             UserConfig config,
             Action<string> onSetBarStyle,
+            Action<string> onSetThemeMode,
             Action onToggleLockPos,
             Action onResetPos,
             Action onToggleLang,
@@ -67,6 +54,7 @@ namespace AntigravityHud
             _dpi = dpiScale;
             _config = config ?? new UserConfig();
             _onSetBarStyle = onSetBarStyle;
+            _onSetThemeMode = onSetThemeMode;
             _onToggleLockPos = onToggleLockPos;
             _onResetPos = onResetPos;
             _onToggleLang = onToggleLang;
@@ -80,10 +68,10 @@ namespace AntigravityHud
             TopMost = true;
             DoubleBuffered = true;
             StartPosition = FormStartPosition.Manual;
-            BackColor = ColBg;
+            BackColor = ThemeManager.ForApp().CardBg;
 
             Width = S(246);
-            Height = S(296);
+            Height = S(346);
 
             Deactivate += (s, e) => Hide();
             KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape) Hide(); };
@@ -107,6 +95,18 @@ namespace AntigravityHud
         {
             base.OnHandleCreated(e);
             ApplyRoundedCorners();
+            RefreshThemeChrome();
+        }
+
+        public void RefreshThemeChrome()
+        {
+            ThemePalette pal = ThemeManager.ForApp();
+            BackColor = pal.CardBg;
+            if (IsHandleCreated)
+            {
+                ThemeManager.ApplyDwmTheme(Handle, pal.IsDark);
+            }
+            if (Visible) Invalidate();
         }
 
         private void ApplyRoundedCorners()
@@ -138,6 +138,7 @@ namespace AntigravityHud
 
         public void ShowNearPoint(Point screenPt, Rectangle barRect)
         {
+            RefreshThemeChrome();
             Rectangle wa = Screen.FromPoint(screenPt).WorkingArea;
             int gap = S(8);
 
@@ -172,7 +173,7 @@ namespace AntigravityHud
         public void RenderOffscreenToPng(string outPath)
         {
             if (!IsHandleCreated) CreateControl();
-            _mousePt = new Point(Width / 2, S(86)); // Highlight first action row softly for preview
+            _mousePt = new Point(Width / 2, S(136));
             using (var bmp = new Bitmap(Width, Height, PixelFormat.Format32bppArgb))
             using (Graphics g = Graphics.FromImage(bmp))
             {
@@ -189,6 +190,9 @@ namespace AntigravityHud
                 _rcStyleSegs[0].Contains(e.Location) ||
                 _rcStyleSegs[1].Contains(e.Location) ||
                 _rcStyleSegs[2].Contains(e.Location) ||
+                _rcThemeSegs[0].Contains(e.Location) ||
+                _rcThemeSegs[1].Contains(e.Location) ||
+                _rcThemeSegs[2].Contains(e.Location) ||
                 _rcLockRow.Contains(e.Location) ||
                 (isCustom && _rcResetRow.Contains(e.Location)) ||
                 _rcLangRow.Contains(e.Location) ||
@@ -203,13 +207,24 @@ namespace AntigravityHud
         {
             if (e.Button != MouseButtons.Left) return;
 
-            // Inline 3-way capsule width selector (updates live without closing!)
             string[] styleKeys = { "minimal", "compact", "labeled" };
             for (int i = 0; i < 3; i++)
             {
                 if (_rcStyleSegs[i].Contains(e.Location))
                 {
                     if (_onSetBarStyle != null) _onSetBarStyle(styleKeys[i]);
+                    Invalidate();
+                    return;
+                }
+            }
+
+            string[] themeKeys = { "auto", "light", "dark" };
+            for (int i = 0; i < 3; i++)
+            {
+                if (_rcThemeSegs[i].Contains(e.Location))
+                {
+                    if (_onSetThemeMode != null) _onSetThemeMode(themeKeys[i]);
+                    RefreshThemeChrome();
                     Invalidate();
                     return;
                 }
@@ -267,9 +282,10 @@ namespace AntigravityHud
 
         private void RenderAll(Graphics g)
         {
+            ThemePalette pal = ThemeManager.ForApp();
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-            g.Clear(ColBg);
+            g.Clear(pal.CardBg);
 
             int pad = S(10);
             int contentW = Width - pad * 2;
@@ -281,50 +297,32 @@ namespace AntigravityHud
             using (var fBodyBold = new Font(ff, Math.Max(11.5f, S(12.2f)), FontStyle.Bold, GraphicsUnit.Pixel))
             using (var fSmall = new Font(ff, Math.Max(10f, S(11.0f)), FontStyle.Regular, GraphicsUnit.Pixel))
             {
-                // 1. Header caption + inline 3-way capsule width segmented control
-                DrawLeft(g, I18n.T("胶囊样式", "CAPSULE WIDTH"), fCap, ColSub, new Rectangle(pad + S(2), y, contentW, S(15)));
-                y += S(19);
+                // 1. Inline 3-way capsule width selector
+                DrawLeft(g, I18n.T("胶囊样式", "CAPSULE WIDTH"), fCap, pal.TextSub, new Rectangle(pad + S(2), y, contentW, S(15)));
+                y += S(18);
+                DrawSegmented3(g, pad, y, contentW, S(27), _rcStyleSegs,
+                    new[] { I18n.T("极致短", "Min"), I18n.T("干练", "Compact"), I18n.T("带标签", "Labeled") },
+                    new[] { "minimal", "compact", "labeled" },
+                    _config.BarStyle ?? "compact", pal, fBodyBold, fSmall);
+                y += S(34);
 
-                int segWrapH = S(28);
-                var rcSegWrap = new Rectangle(pad, y, contentW, segWrapH);
-                FillRound(g, rcSegWrap, S(7), ColSubtle, ColBorder);
+                // 2. Inline 3-way theme selector (Auto / Light / Dark)
+                DrawLeft(g, I18n.T("外观主题", "APPEARANCE"), fCap, pal.TextSub, new Rectangle(pad + S(2), y, contentW, S(15)));
+                y += S(18);
+                DrawSegmented3(g, pad, y, contentW, S(27), _rcThemeSegs,
+                    new[] { I18n.T("跟随系统", "Auto"), I18n.T("浅色", "Light"), I18n.T("深色", "Dark") },
+                    new[] { "auto", "light", "dark" },
+                    _config.ThemeMode ?? "auto", pal, fBodyBold, fSmall);
+                y += S(34);
 
-                string curStyle = _config.BarStyle ?? "compact";
-                string[] labels =
-                {
-                    I18n.T("极致短", "Min"),
-                    I18n.T("干练", "Compact"),
-                    I18n.T("带标签", "Labeled")
-                };
-                string[] keys = { "minimal", "compact", "labeled" };
-                int innerPad = S(2.5f);
-                int segW = (contentW - innerPad * 2) / 3;
-
-                for (int i = 0; i < 3; i++)
-                {
-                    int sx = pad + innerPad + i * segW;
-                    int sw = (i == 2) ? (rcSegWrap.Right - innerPad - sx) : segW;
-                    _rcStyleSegs[i] = new Rectangle(sx, y + innerPad, sw, segWrapH - innerPad * 2);
-                    bool act = string.Equals(curStyle, keys[i], StringComparison.OrdinalIgnoreCase);
-                    bool hov = _rcStyleSegs[i].Contains(_mousePt);
-
-                    if (act)
-                        FillRound(g, _rcStyleSegs[i], S(5), ColBg, ColBorder);
-                    else if (hov)
-                        FillRound(g, _rcStyleSegs[i], S(5), ColHover, ColHover);
-
-                    DrawCenter(g, labels[i], act ? fBodyBold : fSmall, act ? ColAccent : ColSub, _rcStyleSegs[i]);
-                }
-
-                y += segWrapH + S(8);
-                DrawSep(g, pad, y, contentW);
+                DrawSep(g, pad, y, contentW, pal.CardBorder);
                 y += S(6);
 
-                // 2. Position & language section
-                int rowH = S(32);
+                // 3. Position & language section
+                int rowH = S(31);
 
                 _rcLockRow = new Rectangle(pad, y, contentW, rowH);
-                DrawToggleRow(g, _rcLockRow, "lock", I18n.T("锁定胶囊位置", "Lock Position"), _config.PositionLocked, fBody);
+                DrawToggleRow(g, _rcLockRow, "lock", I18n.T("锁定胶囊位置", "Lock Position"), _config.PositionLocked, pal, fBody);
                 y += rowH + S(2);
 
                 bool isCustom = string.Equals(_config.AnchorMode, "custom", StringComparison.OrdinalIgnoreCase);
@@ -332,44 +330,44 @@ namespace AntigravityHud
                 DrawActionRow(g, _rcResetRow, "reset",
                     I18n.T("重置到默认空位", "Reset Position"),
                     isCustom ? I18n.T("归位", "Reset") : I18n.T("默认中", "Auto"),
-                    isCustom, false, fBody, fSmall);
+                    isCustom, false, pal, fBody, fSmall);
                 y += rowH + S(2);
 
                 _rcLangRow = new Rectangle(pad, y, contentW, rowH);
                 DrawActionRow(g, _rcLangRow, "lang",
                     I18n.T("界面语言", "Language"),
                     I18n.IsZh ? "中 → EN" : "EN → ZH",
-                    true, false, fBody, fSmall);
+                    true, false, pal, fBody, fSmall);
                 y += rowH + S(5);
 
-                DrawSep(g, pad, y, contentW);
+                DrawSep(g, pad, y, contentW, pal.CardBorder);
                 y += S(6);
 
-                // 3. System section
+                // 4. System section
                 bool autoStartOn = _getAutostart != null && _getAutostart();
                 _rcAutoStartRow = new Rectangle(pad, y, contentW, rowH);
-                DrawToggleRow(g, _rcAutoStartRow, "power", I18n.T("开机自动启动", "Launch at Login"), autoStartOn, fBody);
+                DrawToggleRow(g, _rcAutoStartRow, "power", I18n.T("开机自动启动", "Launch at Login"), autoStartOn, pal, fBody);
                 y += rowH + S(2);
 
                 _rcLogsRow = new Rectangle(pad, y, contentW, rowH);
                 DrawActionRow(g, _rcLogsRow, "folder",
                     I18n.T("打开本地日志目录", "Open Logs Folder"),
-                    "", true, false, fBody, fSmall);
+                    "", true, false, pal, fBody, fSmall);
                 y += rowH + S(5);
 
-                DrawSep(g, pad, y, contentW);
+                DrawSep(g, pad, y, contentW, pal.CardBorder);
                 y += S(6);
 
-                // 4. Exit row
+                // 5. Exit row
                 _rcExitRow = new Rectangle(pad, y, contentW, rowH);
                 DrawActionRow(g, _rcExitRow, "exit",
                     I18n.T("退出 Antigravity HUD", "Exit Antigravity HUD"),
-                    "", true, true, fBody, fSmall);
+                    "", true, true, pal, fBody, fSmall);
             }
 
             if (!_dwmRoundedApplied)
             {
-                using (var penOut = new Pen(ColBorder, 1.2f))
+                using (var penOut = new Pen(pal.WinBorder, 1.2f))
                 using (GraphicsPath gpOut = MakeRound(new Rectangle(0, 0, Width - 1, Height - 1), S(10)))
                 {
                     g.DrawPath(penOut, gpOut);
@@ -377,43 +375,72 @@ namespace AntigravityHud
             }
         }
 
-        private void DrawToggleRow(Graphics g, Rectangle rc, string iconKind, string title, bool isOn, Font fBody)
+        private void DrawSegmented3(
+            Graphics g, int x, int y, int w, int h, Rectangle[] rects,
+            string[] labels, string[] keys, string currentKey,
+            ThemePalette pal, Font fBold, Font fSmall)
         {
-            bool hov = rc.Contains(_mousePt);
-            if (hov) FillRound(g, rc, S(7), ColHover, ColHover);
+            var rcWrap = new Rectangle(x, y, w, h);
+            Color wrapBg = pal.IsDark ? Color.FromArgb(24, 24, 28) : pal.SubtleFill;
+            Color actBg = pal.IsDark ? Color.FromArgb(54, 54, 62) : pal.CardBg;
+            Color actBd = pal.IsDark ? Color.FromArgb(78, 78, 88) : pal.CardBorder;
+            FillRound(g, rcWrap, S(7), wrapBg, pal.CardBorder);
+
+            int innerPad = S(2.5f);
+            int segW = (w - innerPad * 2) / 3;
+            for (int i = 0; i < 3; i++)
+            {
+                int sx = x + innerPad + i * segW;
+                int sw = (i == 2) ? (rcWrap.Right - innerPad - sx) : segW;
+                rects[i] = new Rectangle(sx, y + innerPad, sw, h - innerPad * 2);
+                bool act = string.Equals(currentKey, keys[i], StringComparison.OrdinalIgnoreCase);
+                bool hov = rects[i].Contains(_mousePt);
+
+                if (act)
+                    FillRound(g, rects[i], S(5), actBg, actBd);
+                else if (hov)
+                    FillRound(g, rects[i], S(5), pal.HoverFill, pal.HoverFill);
+
+                DrawCenter(g, labels[i], act ? fBold : fSmall, act ? pal.Accent : pal.TextSub, rects[i]);
+            }
+        }
+
+        private void DrawToggleRow(Graphics g, Rectangle rc, string iconKind, string title, bool isOn, ThemePalette pal, Font fBody)
+        {
+            if (rc.Contains(_mousePt)) FillRound(g, rc, S(7), pal.HoverFill, pal.HoverFill);
 
             int cy = rc.Top + rc.Height / 2;
-            DrawVectorIcon(g, iconKind, rc.Left + S(14), cy, isOn ? ColAccent : ColSub);
-            DrawLeft(g, title, fBody, ColText, new Rectangle(rc.Left + S(29), rc.Top, rc.Width - S(72), rc.Height));
+            DrawVectorIcon(g, iconKind, rc.Left + S(14), cy, isOn ? pal.Accent : pal.TextSub);
+            DrawLeft(g, title, fBody, pal.TextMain, new Rectangle(rc.Left + S(29), rc.Top, rc.Width - S(72), rc.Height));
 
-            // Crisp Win11/iOS Pill Toggle
             int tw = S(30);
             int th = S(16);
             int tx = rc.Right - S(8) - tw;
             int ty = cy - th / 2;
             var rcTrack = new Rectangle(tx, ty, tw, th);
-            FillRound(g, rcTrack, th / 2, isOn ? ColOk : Color.FromArgb(203, 213, 225), isOn ? ColOk : Color.FromArgb(203, 213, 225));
+            Color trkCol = isOn ? pal.Ok : pal.ToggleTrackOff;
+            FillRound(g, rcTrack, th / 2, trkCol, trkCol);
 
             int knobD = th - S(4);
             int kx = isOn ? (rcTrack.Right - knobD - S(2)) : (rcTrack.Left + S(2));
-            using (var br = new SolidBrush(Color.White))
+            using (var br = new SolidBrush(pal.ToggleKnob))
             {
                 g.FillEllipse(br, kx, ty + S(2), knobD, knobD);
             }
         }
 
-        private void DrawActionRow(Graphics g, Rectangle rc, string iconKind, string title, string rightTag, bool enabled, bool danger, Font fBody, Font fSmall)
+        private void DrawActionRow(Graphics g, Rectangle rc, string iconKind, string title, string rightTag, bool enabled, bool danger, ThemePalette pal, Font fBody, Font fSmall)
         {
             bool hov = enabled && rc.Contains(_mousePt);
             if (hov)
             {
-                Color bg = danger ? ColDangerSoft : ColHover;
+                Color bg = danger ? pal.DangerSoft : pal.HoverFill;
                 FillRound(g, rc, S(7), bg, bg);
             }
 
             int cy = rc.Top + rc.Height / 2;
-            Color fg = !enabled ? ColMuted : (danger ? ColDanger : ColText);
-            Color ic = !enabled ? ColMuted : (danger ? ColDanger : ColSub);
+            Color fg = !enabled ? pal.TextMuted : (danger ? pal.DangerText : pal.TextMain);
+            Color ic = !enabled ? pal.TextMuted : (danger ? pal.DangerText : pal.TextSub);
             DrawVectorIcon(g, iconKind, rc.Left + S(14), cy, ic);
 
             int rightReserve = string.IsNullOrEmpty(rightTag) ? S(10) : S(72);
@@ -421,8 +448,8 @@ namespace AntigravityHud
 
             if (!string.IsNullOrEmpty(rightTag))
             {
-                Color badgeBg = enabled ? (hov ? ColAccentSoft : ColSubtle) : ColSubtle;
-                Color badgeFg = enabled ? ColAccent : ColMuted;
+                Color badgeBg = enabled ? (hov ? pal.AccentSoft : pal.SubtleFill) : pal.SubtleFill;
+                Color badgeFg = enabled ? pal.Accent : pal.TextMuted;
                 int bw = Math.Max(S(38), MeasureW(g, rightTag, fSmall) + S(12));
                 int bh = S(18);
                 var rcBadge = new Rectangle(rc.Right - S(8) - bw, cy - bh / 2, bw, bh);
@@ -495,9 +522,9 @@ namespace AntigravityHud
             }
         }
 
-        private static void DrawSep(Graphics g, int x, int y, int w)
+        private static void DrawSep(Graphics g, int x, int y, int w, Color col)
         {
-            using (var pen = new Pen(ColSep, 1f))
+            using (var pen = new Pen(col, 1f))
             {
                 g.DrawLine(pen, x + 2, y, x + w - 2, y);
             }

@@ -119,36 +119,68 @@ namespace AntigravityHud
         private string _hoverHint = "";
         private Point _mousePt = new Point(-1, -1);
 
-        // Light Clean Theme Palette (1:1 matching official Aux Pane HUD)
-        private static readonly Color ColWinBg = Color.FromArgb(246, 247, 249);
-        private static readonly Color ColWinBorder = Color.FromArgb(216, 221, 229);
-        private static readonly Color ColCardBg = Color.FromArgb(255, 255, 255);
-        private static readonly Color ColCardBorder = Color.FromArgb(228, 231, 236);
-        private static readonly Color ColSubtleFill = Color.FromArgb(241, 244, 248);
-        private static readonly Color ColHoverFill = Color.FromArgb(234, 240, 250);
-        private static readonly Color ColTextMain = Color.FromArgb(24, 24, 27);
-        private static readonly Color ColTextSub = Color.FromArgb(113, 113, 122);
-        private static readonly Color ColAccent = Color.FromArgb(37, 99, 235);
-        private static readonly Color ColAccentSoft = Color.FromArgb(232, 240, 254);
+        // Dynamic Theme Palette (follows Windows Light/Dark or user override via ThemeManager)
+        private static ThemePalette Pal { get { return ThemeManager.ForApp(); } }
+        private static Color ColWinBg { get { return Pal.WinBg; } }
+        private static Color ColWinBorder { get { return Pal.WinBorder; } }
+        private static Color ColCardBg { get { return Pal.CardBg; } }
+        private static Color ColCardBorder { get { return Pal.CardBorder; } }
+        private static Color ColSubtleFill { get { return Pal.SubtleFill; } }
+        private static Color ColHoverFill { get { return Pal.HoverFill; } }
+        private static Color ColTextMain { get { return Pal.TextMain; } }
+        private static Color ColTextSub { get { return Pal.TextSub; } }
+        private static Color ColTextMuted { get { return Pal.TextMuted; } }
+        private static Color ColAccent { get { return Pal.Accent; } }
+        private static Color ColAccentSoft { get { return Pal.AccentSoft; } }
+        private static Color ColAccentBtnBg { get { return Pal.IsDark ? Color.FromArgb(37, 99, 235) : Pal.Accent; } }
+        private static Color ColAccentBorder { get { return Pal.IsDark ? Color.FromArgb(62, 108, 178) : Color.FromArgb(147, 197, 253); } }
+        private static Color ColHoverBorder { get { return Pal.IsDark ? Color.FromArgb(68, 92, 134) : Color.FromArgb(191, 219, 254); } }
 
-        private static readonly Color ColOk = Color.FromArgb(16, 185, 129);
-        private static readonly Color ColOkText = Color.FromArgb(5, 150, 105);
-        private static readonly Color ColOkSoft = Color.FromArgb(218, 248, 236);
+        private static Color ColOk { get { return Pal.Ok; } }
+        private static Color ColOkText { get { return Pal.OkText; } }
+        private static Color ColOkSoft { get { return Pal.OkSoft; } }
+        private static Color ColOkBorder { get { return Pal.OkBorder; } }
 
-        private static readonly Color ColWarn = Color.FromArgb(245, 158, 11);
-        private static readonly Color ColWarnText = Color.FromArgb(180, 83, 9);
-        private static readonly Color ColWarnSoft = Color.FromArgb(254, 243, 199);
+        private static Color ColWarn { get { return Pal.Warn; } }
+        private static Color ColWarnText { get { return Pal.WarnText; } }
+        private static Color ColWarnSoft { get { return Pal.WarnSoft; } }
+        private static Color ColWarnBorder { get { return Pal.WarnBorder; } }
 
-        private static readonly Color ColDanger = Color.FromArgb(239, 68, 68);
-        private static readonly Color ColDangerText = Color.FromArgb(220, 38, 38);
-        private static readonly Color ColDangerSoft = Color.FromArgb(254, 226, 226);
+        private static Color ColDanger { get { return Pal.Danger; } }
+        private static Color ColDangerText { get { return Pal.DangerText; } }
+        private static Color ColDangerSoft { get { return Pal.DangerSoft; } }
+        private static Color ColDangerBorder { get { return Pal.IsDark ? Color.FromArgb(148, 56, 62) : Color.FromArgb(252, 165, 165); } }
 
-        // Precision Industrial Palette (Graphite / Cobalt / Sea-Teal / Amber)
-        private static readonly Color ColCatSys = Color.FromArgb(71, 85, 105);
-        private static readonly Color ColCatTools = Color.FromArgb(100, 116, 139);
-        private static readonly Color ColCatUser = Color.FromArgb(217, 119, 6);
-        private static readonly Color ColCatResp = Color.FromArgb(13, 148, 136);
-        private static readonly Color ColCatRes = Color.FromArgb(37, 99, 235);
+        private static Color ColCatSys { get { return Pal.CatSys; } }
+        private static Color ColCatTools { get { return Pal.CatTools; } }
+        private static Color ColCatUser { get { return Pal.CatUser; } }
+        private static Color ColCatResp { get { return Pal.CatResp; } }
+        private static Color ColCatRes { get { return Pal.CatRes; } }
+
+        private static Color ColTrackBg { get { return Pal.TrackBg; } }
+        private static Color ColBarEmptyTrack { get { return Pal.BarEmptyTrack; } }
+        private static Color ColRowAltBg { get { return Pal.IsDark ? Color.FromArgb(39, 39, 45) : Color.FromArgb(249, 250, 252); } }
+        private static Color ColRowBorder { get { return Pal.IsDark ? Color.FromArgb(48, 48, 55) : Color.FromArgb(238, 241, 246); } }
+        private static Color ColSoftSep { get { return Pal.IsDark ? Color.FromArgb(52, 52, 60) : Color.FromArgb(234, 237, 242); } }
+        private static Color ColBodyLabel { get { return Pal.IsDark ? Color.FromArgb(212, 212, 218) : Color.FromArgb(52, 58, 68); } }
+        private static Color ColScrollTrack { get { return Pal.IsDark ? Color.FromArgb(44, 44, 50) : Color.FromArgb(236, 240, 246); } }
+        private static Color ColScrollThumb { get { return Pal.IsDark ? Color.FromArgb(88, 92, 104) : Color.FromArgb(180, 192, 210); } }
+        private static Color ColDisabledArrow { get { return Pal.IsDark ? Color.FromArgb(88, 88, 98) : Color.FromArgb(190, 196, 205); } }
+
+        private sealed class ThemeMenuColorTable : ProfessionalColorTable
+        {
+            public override Color ToolStripDropDownBackground { get { return ColCardBg; } }
+            public override Color MenuBorder { get { return ColWinBorder; } }
+            public override Color MenuItemBorder { get { return ColHoverBorder; } }
+            public override Color MenuItemSelected { get { return ColHoverFill; } }
+            public override Color MenuItemSelectedGradientBegin { get { return ColHoverFill; } }
+            public override Color MenuItemSelectedGradientEnd { get { return ColHoverFill; } }
+            public override Color ImageMarginGradientBegin { get { return ColCardBg; } }
+            public override Color ImageMarginGradientMiddle { get { return ColCardBg; } }
+            public override Color ImageMarginGradientEnd { get { return ColCardBg; } }
+            public override Color SeparatorDark { get { return Pal.Divider; } }
+            public override Color SeparatorLight { get { return ColCardBg; } }
+        }
 
         // Shared GDI+ StringFormat instances (zero per-frame allocation / zero handle leak)
         private static readonly StringFormat SfNearEllipsis = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
@@ -264,10 +296,27 @@ namespace AntigravityHud
             ApplyWindowCorners();
         }
 
+        public void RefreshThemeChrome()
+        {
+            BackColor = ColWinBg;
+            if (_convMenu != null && !_convMenu.IsDisposed)
+            {
+                _convMenu.BackColor = ColCardBg;
+                _convMenu.ForeColor = ColTextMain;
+                _convMenu.Renderer = new ToolStripProfessionalRenderer(new ThemeMenuColorTable());
+            }
+            if (IsHandleCreated)
+            {
+                ApplyWindowCorners();
+            }
+            if (Visible) Invalidate();
+        }
+
         private void ApplyWindowCorners()
         {
             try
             {
+                ThemeManager.ApplyDwmTheme(Handle, Pal.IsDark);
                 // Win11 native GPU-composited anti-aliased rounded corners (zero CPU/GDI region overhead + native shadow)
                 int cornerPref = 2; // DWMWCP_ROUND
                 int hr = NativeMethods.DwmSetWindowAttribute(Handle, 33, ref cornerPref, sizeof(int));
@@ -275,8 +324,8 @@ namespace AntigravityHud
                 {
                     _dwmRoundedApplied = true;
                     Region = null;
-                    // COLORREF 0x00BBGGRR matching ColWinBorder RGB(216, 221, 229)
-                    int borderColorRef = (229 << 16) | (221 << 8) | 216;
+                    Color bd = ColWinBorder;
+                    int borderColorRef = (bd.B << 16) | (bd.G << 8) | bd.R;
                     NativeMethods.DwmSetWindowAttribute(Handle, 34, ref borderColorRef, sizeof(int));
                     return;
                 }
@@ -345,6 +394,7 @@ namespace AntigravityHud
 
         public void ShowNearBar(Rectangle barScreenRect)
         {
+            RefreshThemeChrome();
             Rectangle probe = barScreenRect.Width > 0
                 ? barScreenRect
                 : new Rectangle(Cursor.Position.X, Cursor.Position.Y, 1, 1);
@@ -1146,6 +1196,9 @@ namespace AntigravityHud
         private void OpenConversationMenu()
         {
             _convMenu.Items.Clear();
+            _convMenu.BackColor = ColCardBg;
+            _convMenu.ForeColor = ColTextMain;
+            _convMenu.Renderer = new ToolStripProfessionalRenderer(new ThemeMenuColorTable());
 
             Font oldMf = _convMenuFont;
             _convMenuFont = new Font(I18n.UiFontFamily, 9.0f, FontStyle.Regular, GraphicsUnit.Point);
@@ -1373,7 +1426,10 @@ namespace AntigravityHud
                 // ================= 2. SEGMENTED TABS + READ-ONLY SHIELD BADGE =================
                 int navWrapH = S(32);
                 var rcSegWrap = new Rectangle(pad, y, contentW, navWrapH);
-                FillRoundCard(g, rcSegWrap, S(9), ColSubtleFill, ColCardBorder);
+                Color segWrapBg = Pal.IsDark ? Color.FromArgb(30, 30, 35) : ColSubtleFill;
+                Color segActBg = Pal.IsDark ? Color.FromArgb(52, 52, 60) : ColCardBg;
+                Color segActBd = Pal.IsDark ? Color.FromArgb(76, 76, 86) : ColCardBorder;
+                FillRoundCard(g, rcSegWrap, S(9), segWrapBg, ColCardBorder);
 
                 int badgeW = I18n.IsZh ? S(108) : S(116);
                 int tabAreaW = contentW - badgeW - S(10);
@@ -1382,12 +1438,12 @@ namespace AntigravityHud
                 _rcTabLedger = new Rectangle(_rcTabHud.Right + S(4), y + S(3), halfTab, navWrapH - S(6));
 
                 if (_activeTab == MainTab.WindowHud)
-                    FillRoundCard(g, _rcTabHud, S(6), ColCardBg, ColCardBorder);
+                    FillRoundCard(g, _rcTabHud, S(6), segActBg, segActBd);
                 else if (_rcTabHud.Contains(_mousePt))
                     FillRoundCard(g, _rcTabHud, S(6), ColHoverFill, ColCardBorder);
 
                 if (_activeTab == MainTab.GlobalLedger)
-                    FillRoundCard(g, _rcTabLedger, S(6), ColCardBg, ColCardBorder);
+                    FillRoundCard(g, _rcTabLedger, S(6), segActBg, segActBd);
                 else if (_rcTabLedger.Contains(_mousePt))
                     FillRoundCard(g, _rcTabLedger, S(6), ColHoverFill, ColCardBorder);
 
@@ -1395,7 +1451,7 @@ namespace AntigravityHud
                 DrawCenteredText(g, I18n.T("全局账本", "Global Ledger"), _activeTab == MainTab.GlobalLedger ? fBodyBold : fBody, _activeTab == MainTab.GlobalLedger ? ColTextMain : ColTextSub, _rcTabLedger);
 
                 var rcSafe = new Rectangle(rcSegWrap.Right - badgeW - S(4), y + S(4), badgeW, navWrapH - S(8));
-                FillRoundCard(g, rcSafe, S(12), ColOkSoft, Color.FromArgb(167, 243, 208));
+                FillRoundCard(g, rcSafe, S(12), ColOkSoft, ColOkBorder);
                 DrawStatusDot(g, rcSafe.Left + S(11), rcSafe.Top + rcSafe.Height / 2, S(6), ColOk, false);
                 DrawTxtL(g, I18n.T("纯本地·0外联", "Local · Offline"), fMetaBold, ColOkText,
                     new Rectangle(rcSafe.Left + S(19), rcSafe.Top, rcSafe.Width - S(22), rcSafe.Height));
@@ -1626,7 +1682,7 @@ namespace AntigravityHud
             if (hud != null && hud.IsSubagent && !string.IsNullOrEmpty(hud.ParentConvKey))
             {
                 string backLbl = I18n.T("← 返回主窗口", "<- Main Chat");
-                int chipW = DrawChipTag(g, backLbl, fSmallBold, ColAccent, Color.White, sx, scy, S(6));
+                int chipW = DrawChipTag(g, backLbl, fSmallBold, ColAccentBtnBg, Color.White, sx, scy, S(6));
                 _rcSubagentChip = new Rectangle(sx - S(2), rcPoolStrip.Top, chipW + S(4), rcPoolStrip.Height);
                 sx += chipW + S(8);
                 stripTxtMain = I18n.T("子任务视角 · 归属: ", "Subagent · Parent: ") + hud.ParentTitle;
@@ -1637,7 +1693,7 @@ namespace AntigravityHud
                 string subBadge = hud.SubagentWorkingCount > 0
                     ? I18n.TF("● 子任务 {0}/{1} · {2}", "* Sub {0}/{1} · {2}", hud.SubagentWorkingCount, hud.SubagentCount, FmtCompact(hud.SubagentTokens))
                     : I18n.TF("子任务 {0}个 · {1}", "{0} Subagents · {1}", hud.SubagentCount, FmtCompact(hud.SubagentTokens));
-                Color chipBg = subOpen ? ColAccent : (hud.SubagentWorkingCount > 0 ? ColOkSoft : ColAccentSoft);
+                Color chipBg = subOpen ? ColAccentBtnBg : (hud.SubagentWorkingCount > 0 ? ColOkSoft : ColAccentSoft);
                 Color chipFg = subOpen ? Color.White : (hud.SubagentWorkingCount > 0 ? ColOkText : ColAccent);
                 int chipW = DrawChipTag(g, subBadge, fSmallBold, chipBg, chipFg, sx, scy, S(6));
                 _rcSubagentChip = new Rectangle(sx - S(2), rcPoolStrip.Top, chipW + S(4), rcPoolStrip.Height);
@@ -1720,7 +1776,7 @@ namespace AntigravityHud
             }
             else
             {
-                Color iqDotCol = iqLv == "ok" ? ColOk : (iqLv == "warn" ? ColWarn : (iqLv == "danger" ? ColDanger : Color.FromArgb(156, 163, 175)));
+                Color iqDotCol = iqLv == "ok" ? ColOk : (iqLv == "warn" ? ColWarn : (iqLv == "danger" ? ColDanger : ColTextMuted));
                 DrawStatusDot(g, ix + S(5), by + S(12), S(7), iqDotCol, iqLv == "ok");
                 DrawTxtL(g, I18n.T("响应明细", "Turns"), fTitle, ColTextMain, new Rectangle(ix + S(16), by, S(76), S(24)));
                 fx = ix + S(88);
@@ -1747,7 +1803,7 @@ namespace AntigravityHud
                     bool onSlow = (_turnFilter == TurnQuickFilter.SlowWait);
                     int fw = DrawChipTag(g, sLbl, onSlow ? fSmallBold : fSmall,
                         onSlow ? ColTextMain : ColSubtleFill,
-                        onSlow ? Color.White : ColTextSub, fx, fcy, S(5));
+                        onSlow ? (Pal.IsDark ? ColWinBg : Color.White) : ColTextSub, fx, fcy, S(5));
                     _rcTurnFilterSlow = new Rectangle(fx - S(1), by + S(2), fw + S(2), S(20));
                     fx += fw + S(5);
                 }
@@ -1761,7 +1817,7 @@ namespace AntigravityHud
                     bool onWarn = (_turnFilter == TurnQuickFilter.CacheWarn);
                     int fw = DrawChipTag(g, wLbl, onWarn ? fSmallBold : fSmall,
                         onWarn ? ColTextMain : ColSubtleFill,
-                        onWarn ? Color.White : ColTextSub, fx, fcy, S(5));
+                        onWarn ? (Pal.IsDark ? ColWinBg : Color.White) : ColTextSub, fx, fcy, S(5));
                     _rcTurnFilterWarn = new Rectangle(fx - S(1), by + S(2), fw + S(2), S(20));
                 }
             }
@@ -1779,19 +1835,19 @@ namespace AntigravityHud
             {
                 var rcBanner = new Rectangle(ix, by, iw, S(22));
                 Color banBg = ColWarnSoft;
-                Color banBd = Color.FromArgb(252, 211, 77);
+                Color banBd = ColWarnBorder;
                 Color banFg = ColWarnText;
                 string stripTxt = hud != null && !string.IsNullOrEmpty(hud.LiveBannerText) ? hud.LiveBannerText : (hud != null ? hud.IqReason : "");
                 if (bannerLv == "compact_done")
                 {
                     banBg = ColOkSoft;
-                    banBd = Color.FromArgb(110, 231, 183);
+                    banBd = ColOkBorder;
                     banFg = ColOkText;
                 }
                 else if (iqLv == "danger" && string.IsNullOrEmpty(bannerLv))
                 {
                     banBg = ColDangerSoft;
-                    banBd = Color.FromArgb(252, 165, 165);
+                    banBd = ColDangerBorder;
                     banFg = ColDangerText;
                 }
                 FillRoundCard(g, rcBanner, S(6), banBg, banBd);
@@ -1848,7 +1904,7 @@ namespace AntigravityHud
                 if (c3End > litTicks) c3End = litTicks;
             }
 
-            using (var brEmpty = new SolidBrush(Color.FromArgb(231, 236, 242)))
+            using (var brEmpty = new SolidBrush(ColBarEmptyTrack))
             using (var brBase = new SolidBrush(ColCatSys))
             using (var brResp = new SolidBrush(ColCatResp))
             using (var brRes = new SolidBrush(ColCatRes))
@@ -1975,7 +2031,7 @@ namespace AntigravityHud
                 bool hovered = rcHit.Contains(_mousePt);
                 if (selected)
                 {
-                    FillRoundCard(g, rcHit, S(6), ColAccentSoft, Color.FromArgb(147, 197, 253));
+                    FillRoundCard(g, rcHit, S(6), ColAccentSoft, ColAccentBorder);
                 }
                 else if (hovered)
                 {
@@ -1988,13 +2044,13 @@ namespace AntigravityHud
                     g.FillRectangle(brInd, rcInd);
                 }
 
-                Color lblCol = selected ? ColAccent : (hovered ? ColTextMain : Color.FromArgb(52, 58, 68));
+                Color lblCol = selected ? ColAccent : (hovered ? ColTextMain : ColBodyLabel);
                 DrawTxtL(g, r.Title, (hovered || selected) ? fSmallBold : fSmall, lblCol,
                     new Rectangle(x + S(9), ry, labelW - S(10), rowH));
 
                 int trackH = S(6);
                 var rcTrack = new Rectangle(barX, ry + (rowH - trackH) / 2, barW, trackH);
-                FillRoundCard(g, rcTrack, S(3), Color.FromArgb(234, 238, 244), Color.FromArgb(234, 238, 244));
+                FillRoundCard(g, rcTrack, S(3), ColBarEmptyTrack, ColBarEmptyTrack);
 
                 double ratio = totalUsed > 0 ? Math.Min(1.0, Math.Max(0.0, (double)r.Tok / denom)) : 0.0;
                 if (r.Tok > 0)
@@ -2048,15 +2104,15 @@ namespace AntigravityHud
 
                 bool hov = rcRow.Contains(_mousePt);
                 FillRoundCard(g, rcRow, S(8),
-                    hov ? ColHoverFill : Color.FromArgb(249, 250, 252),
-                    hov ? Color.FromArgb(147, 197, 253) : ColCardBorder);
+                    hov ? ColHoverFill : ColRowAltBg,
+                    hov ? ColAccentBorder : ColCardBorder);
 
                 int rx = rcRow.Left + S(10);
                 int rw = rcRow.Width - S(20);
                 int topY = y + S(4);
                 int botY = y + S(22);
 
-                Color dotCol = b.IsWorking ? ColOk : Color.FromArgb(148, 163, 184);
+                Color dotCol = b.IsWorking ? ColOk : ColTextMuted;
                 DrawStatusDot(g, rx + S(3), topY + S(8), S(6), dotCol, b.IsWorking);
 
                 string rightTop = I18n.TF("{0} · 窗{1} / 共{2} ›", "{0} · Ctx {1} / Total {2} >",
@@ -2071,7 +2127,7 @@ namespace AntigravityHud
 
                 int miniBarW = S(52);
                 var rcMini = new Rectangle(rx + S(12), botY + S(6), miniBarW, S(4));
-                FillRoundCard(g, rcMini, S(2), Color.FromArgb(226, 232, 240), Color.FromArgb(226, 232, 240));
+                FillRoundCard(g, rcMini, S(2), ColTrackBg, ColTrackBg);
                 double ctxRatio = Math.Min(1.0, Math.Max(0.0, b.ContextUsed / 512000.0));
                 if (b.ContextUsed > 0)
                 {
@@ -2164,12 +2220,12 @@ namespace AntigravityHud
                     g.FillRectangle(brInd, rcInd);
                 }
 
-                DrawTxtL(g, bi.Label, i == 0 ? fSmallBold : fSmall, i == 0 ? ColTextMain : Color.FromArgb(52, 58, 68),
+                DrawTxtL(g, bi.Label, i == 0 ? fSmallBold : fSmall, i == 0 ? ColTextMain : ColBodyLabel,
                     new Rectangle(x + S(9), y, leftW - S(10), rowH));
 
                 int barX = x + leftW + S(4);
                 var rcTrk = new Rectangle(barX, y + (rowH - S(5)) / 2, barW, S(5));
-                FillRoundCard(g, rcTrk, S(2), Color.FromArgb(232, 236, 242), Color.FromArgb(232, 236, 242));
+                FillRoundCard(g, rcTrk, S(2), ColBarEmptyTrack, ColBarEmptyTrack);
                 if (bi.Tokens > 0)
                 {
                     int fw = Math.Max(S(4), (int)Math.Round(barW * Math.Min(1.0, Math.Max(0.0, bi.SharePct / 100.0))));
@@ -2278,16 +2334,16 @@ namespace AntigravityHud
                 if (isExpanded)
                 {
                     bool isPinned = (_pinnedTurnNo == t.TurnNo);
-                    Color expBd = isPinned ? Color.FromArgb(100, 116, 139) : Color.FromArgb(203, 213, 225);
-                    FillRoundCard(g, rcHit, S(6), Color.FromArgb(248, 250, 252), expBd);
+                    Color expBd = isPinned ? (Pal.IsDark ? ColAccentBorder : Color.FromArgb(100, 116, 139)) : Pal.Divider;
+                    FillRoundCard(g, rcHit, S(6), Pal.IsDark ? Pal.PinRowBg : Color.FromArgb(248, 250, 252), expBd);
 
                     var rcTopBand = new Rectangle(rcHit.X + 1, rcHit.Y + 1, rcHit.Width - 2, rowH);
-                    using (var brTop = new SolidBrush(Color.FromArgb(255, 255, 255)))
+                    using (var brTop = new SolidBrush(ColCardBg))
                     using (GraphicsPath gpTop = CreateRoundPath(rcTopBand, S(5)))
                     {
                         g.FillPath(brTop, gpTop);
                     }
-                    using (var penSep = new Pen(Color.FromArgb(226, 232, 240), 1f))
+                    using (var penSep = new Pen(Pal.Divider, 1f))
                     {
                         g.DrawLine(penSep, rcHit.Left + S(6), y + rowH, rcHit.Right - S(6), y + rowH);
                     }
@@ -2297,7 +2353,7 @@ namespace AntigravityHud
                 DrawTxtL(g, t.ShortTag, fMonoBold, ColTextMain, new Rectangle(xMod, y, cMod, rowH));
 
                 string thinkStr = t.EstThinkTok > 0 ? FmtCompact(t.EstThinkTok) : "—";
-                Color thinkCol = t.EstThinkTok > 0 ? Color.FromArgb(15, 118, 110) : ColTextSub;
+                Color thinkCol = t.EstThinkTok > 0 ? (Pal.IsDark ? ColCatResp : Color.FromArgb(15, 118, 110)) : ColTextSub;
                 DrawTxtR(g, thinkStr, fMonoReg, thinkCol, new Rectangle(xThink, y, cThink, rowH));
                 DrawTxtR(g, FmtCompact(t.OutTok), fMonoReg, ColTextMain, new Rectangle(xOut, y, cOut, rowH));
 
@@ -2349,7 +2405,7 @@ namespace AntigravityHud
 
                 if (idx < totalCount - 1 && !isExpanded && y + rowH <= bottomLimit)
                 {
-                    using (var penDash = new Pen(Color.FromArgb(238, 241, 245), 1f))
+                    using (var penDash = new Pen(ColRowBorder, 1f))
                     {
                         g.DrawLine(penDash, x, y, x + innerW, y);
                     }
@@ -2549,7 +2605,7 @@ namespace AntigravityHud
             }
             my += toolRowH + S(6);
 
-            using (var penDash = new Pen(Color.FromArgb(234, 237, 242), 1f) { DashStyle = DashStyle.Dot })
+            using (var penDash = new Pen(ColSoftSep, 1f) { DashStyle = DashStyle.Dot })
             {
                 g.DrawLine(penDash, ix, my, ix + iw, my);
             }
@@ -2596,7 +2652,7 @@ namespace AntigravityHud
                         bool hov = rcRow.Contains(_mousePt);
                         if (hov)
                         {
-                            FillRoundCard(g, rcRow, S(8), ColHoverFill, Color.FromArgb(191, 219, 254));
+                            FillRoundCard(g, rcRow, S(8), ColHoverFill, ColHoverBorder);
                         }
 
                         int rx = ix + S(2);
@@ -2611,9 +2667,9 @@ namespace AntigravityHud
                         ry += S(19);
 
                         var rcProg = new Rectangle(rx, ry, rw, S(5));
-                        FillRoundCard(g, rcProg, S(2), Color.FromArgb(230, 234, 240), Color.FromArgb(230, 234, 240));
+                        FillRoundCard(g, rcProg, S(2), ColTrackBg, ColTrackBg);
                         int fillW = Math.Max(S(6), (int)Math.Round(rw * Math.Min(1.0, share / 100.0)));
-                        using (var brProg = new LinearGradientBrush(new Rectangle(rx, ry, fillW, S(5)), ColAccent, Color.FromArgb(13, 148, 136), 0f))
+                        using (var brProg = new LinearGradientBrush(new Rectangle(rx, ry, fillW, S(5)), ColAccent, ColCatResp, 0f))
                         using (GraphicsPath gp = CreateRoundPath(new Rectangle(rx, ry, fillW, S(5)), S(2)))
                         {
                             g.FillPath(brProg, gp);
@@ -2677,7 +2733,7 @@ namespace AntigravityHud
                     bool hov = rcRow.Contains(_mousePt);
                     if (hov)
                     {
-                        FillRoundCard(g, rcRow, S(8), ColHoverFill, Color.FromArgb(191, 219, 254));
+                        FillRoundCard(g, rcRow, S(8), ColHoverFill, ColHoverBorder);
                     }
 
                     int rx = ix + S(2);
@@ -2692,9 +2748,9 @@ namespace AntigravityHud
 
                     // Line 2: Gradient Progress Bar
                     var rcProg = new Rectangle(rx, ry, rw, S(5));
-                    FillRoundCard(g, rcProg, S(2), Color.FromArgb(230, 234, 240), Color.FromArgb(230, 234, 240));
+                    FillRoundCard(g, rcProg, S(2), ColTrackBg, ColTrackBg);
                     int fillW = Math.Max(S(6), (int)Math.Round(rw * Math.Min(1.0, share / 100.0)));
-                    using (var brProg = new LinearGradientBrush(new Rectangle(rx, ry, fillW, S(5)), ColAccent, Color.FromArgb(14, 165, 233), 0f))
+                    using (var brProg = new LinearGradientBrush(new Rectangle(rx, ry, fillW, S(5)), ColAccent, Pal.IsDark ? Color.FromArgb(56, 189, 248) : Color.FromArgb(14, 165, 233), 0f))
                     using (GraphicsPath gp = CreateRoundPath(new Rectangle(rx, ry, fillW, S(5)), S(2)))
                     {
                         g.FillPath(brProg, gp);
@@ -2822,14 +2878,14 @@ namespace AntigravityHud
 
             bool selConv = (_drillSubTab == 0);
             FillRoundCard(g, _rcDrillTabConv, S(6),
-                selConv ? ColAccent : (_rcDrillTabConv.Contains(_mousePt) ? ColHoverFill : ColSubtleFill),
-                selConv ? ColAccent : ColCardBorder);
+                selConv ? ColAccentBtnBg : (_rcDrillTabConv.Contains(_mousePt) ? ColHoverFill : ColSubtleFill),
+                selConv ? ColAccentBtnBg : ColCardBorder);
             DrawCenteredText(g, I18n.TF("按对话 ({0})", "By Chat ({0})", dd.ConvCount), fSmallBold, selConv ? Color.White : ColTextSub, _rcDrillTabConv);
 
             bool selTurns = (_drillSubTab == 1);
             FillRoundCard(g, _rcDrillTabTurns, S(6),
-                selTurns ? ColAccent : (_rcDrillTabTurns.Contains(_mousePt) ? ColHoverFill : ColSubtleFill),
-                selTurns ? ColAccent : ColCardBorder);
+                selTurns ? ColAccentBtnBg : (_rcDrillTabTurns.Contains(_mousePt) ? ColHoverFill : ColSubtleFill),
+                selTurns ? ColAccentBtnBg : ColCardBorder);
             DrawCenteredText(g, I18n.TF("明细 ({0})", "Turns ({0})", dd.Turns), fSmallBold, selTurns ? Color.White : ColTextSub, _rcDrillTabTurns);
 
             // Right controls: Low-Cache Filter + Prev/Next page micro-buttons
@@ -2839,7 +2895,7 @@ namespace AntigravityHud
             _rcDrillLowCacheBtn = new Rectangle(_rcDrillPrevBtn.Left - S(6) - S(60), ly, S(60), tabH);
 
             Color lcBg = _drillLowCacheOnly ? ColDangerSoft : (_rcDrillLowCacheBtn.Contains(_mousePt) ? ColHoverFill : ColSubtleFill);
-            Color lcBd = _drillLowCacheOnly ? Color.FromArgb(252, 165, 165) : ColCardBorder;
+            Color lcBd = _drillLowCacheOnly ? ColDangerBorder : ColCardBorder;
             Color lcFg = _drillLowCacheOnly ? ColDangerText : ColTextSub;
             FillRoundCard(g, _rcDrillLowCacheBtn, S(6), lcBg, lcBd);
             DrawCenteredText(g, _drillLowCacheOnly ? I18n.T("低缓: 开", "LowCache: On") : I18n.T("仅低缓存", "Low Cache"), fSmallBold, lcFg, _rcDrillLowCacheBtn);
@@ -2892,8 +2948,8 @@ namespace AntigravityHud
 
                     bool hov = rcRow.Contains(_mousePt);
                     FillRoundCard(g, rcRow, S(7),
-                        hov ? ColHoverFill : (drawn % 2 == 1 ? Color.FromArgb(250, 251, 253) : ColCardBg),
-                        hov ? Color.FromArgb(191, 219, 254) : Color.FromArgb(238, 241, 246));
+                        hov ? ColHoverFill : (drawn % 2 == 1 ? ColRowAltBg : ColCardBg),
+                        hov ? ColHoverBorder : ColRowBorder);
 
                     int rx = ix + S(2);
                     int rw = rowW - S(4);
@@ -3005,11 +3061,11 @@ namespace AntigravityHud
                     bool hov = rcRow.Contains(_mousePt);
                     if (hov)
                     {
-                        FillRoundCard(g, rcRow, S(5), ColHoverFill, Color.FromArgb(191, 219, 254));
+                        FillRoundCard(g, rcRow, S(5), ColHoverFill, ColHoverBorder);
                     }
                     else if (drawn % 2 == 1)
                     {
-                        using (var brAlt = new SolidBrush(Color.FromArgb(249, 250, 252)))
+                        using (var brAlt = new SolidBrush(ColRowAltBg))
                         {
                             g.FillRectangle(brAlt, rcRow);
                         }
@@ -3054,8 +3110,8 @@ namespace AntigravityHud
                 _rcPeriodBtns[i] = rP;
                 bool sel = ((int)_ledgerPeriod == i);
                 FillRoundCard(g, rP, S(6),
-                    sel ? ColAccent : (rP.Contains(_mousePt) ? ColHoverFill : ColSubtleFill),
-                    sel ? ColAccent : ColCardBorder);
+                    sel ? ColAccentBtnBg : (rP.Contains(_mousePt) ? ColHoverFill : ColSubtleFill),
+                    sel ? ColAccentBtnBg : ColCardBorder);
                 DrawCenteredText(g, pLabels[i], fSmallBold, sel ? Color.White : ColTextSub, rP);
             }
             return totalW;
@@ -3094,7 +3150,7 @@ namespace AntigravityHud
                 bool hov = rcChip.Contains(_mousePt);
                 FillRoundCard(g, rcChip, S(6),
                     hov ? ColAccentSoft : ColSubtleFill,
-                    hov ? ColAccent : Color.FromArgb(222, 227, 235));
+                    hov ? ColAccent : ColCardBorder);
 
                 DrawTxtL(g, tName, fNameFont, ColTextMain,
                     new Rectangle(rcChip.Left + padX, rcChip.Top, Math.Min(nameW + S(2), rcChip.Width - padX * 2), rcChip.Height));
@@ -3121,12 +3177,12 @@ namespace AntigravityHud
             FillRoundCard(g, _rcDrillPrevBtn, S(5),
                 (canPrev && _rcDrillPrevBtn.Contains(_mousePt)) ? ColHoverFill : ColSubtleFill,
                 ColCardBorder);
-            DrawCenteredText(g, "<", fSmallBold, canPrev ? ColTextMain : Color.FromArgb(190, 196, 205), _rcDrillPrevBtn);
+            DrawCenteredText(g, "<", fSmallBold, canPrev ? ColTextMain : ColDisabledArrow, _rcDrillPrevBtn);
 
             FillRoundCard(g, _rcDrillNextBtn, S(5),
                 (canNext && _rcDrillNextBtn.Contains(_mousePt)) ? ColHoverFill : ColSubtleFill,
                 ColCardBorder);
-            DrawCenteredText(g, ">", fSmallBold, canNext ? ColTextMain : Color.FromArgb(190, 196, 205), _rcDrillNextBtn);
+            DrawCenteredText(g, ">", fSmallBold, canNext ? ColTextMain : ColDisabledArrow, _rcDrillNextBtn);
 
             string posTxt;
             if (total <= 0) posTxt = "0/0";
@@ -3143,19 +3199,19 @@ namespace AntigravityHud
         private void DrawMiniScrollBar(Graphics g, Rectangle track, int total, int visible, int scroll)
         {
             if (total <= visible || track.Height < S(16)) return;
-            FillRoundCard(g, track, S(2), Color.FromArgb(236, 240, 246), Color.FromArgb(236, 240, 246));
+            FillRoundCard(g, track, S(2), ColScrollTrack, ColScrollTrack);
             int thumbH = Math.Max(S(18), (int)Math.Round(track.Height * ((double)visible / total)));
             int maxScroll = Math.Max(1, total - visible);
             int thumbY = track.Top + (int)Math.Round((track.Height - thumbH) * ((double)scroll / maxScroll));
             var rcThumb = new Rectangle(track.Left, thumbY, track.Width, thumbH);
-            FillRoundCard(g, rcThumb, S(2), Color.FromArgb(180, 192, 210), Color.FromArgb(180, 192, 210));
+            FillRoundCard(g, rcThumb, S(2), ColScrollThumb, ColScrollThumb);
         }
 
         private void DrawKpiBox(Graphics g, Rectangle rc, string label, string val, string sub, Font fSmall, Font fBig, Color valCol, bool highlight = false)
         {
             FillRoundCard(g, rc, S(10),
-                highlight ? Color.FromArgb(248, 251, 255) : ColCardBg,
-                highlight ? Color.FromArgb(147, 197, 253) : ColCardBorder);
+                highlight ? Pal.RowHighlight : ColCardBg,
+                highlight ? ColAccentBorder : ColCardBorder);
             int px = rc.Left + S(11);
             int pw = rc.Width - S(18);
             DrawTxtL(g, label, fSmall, highlight ? ColAccent : ColTextSub, new Rectangle(px, rc.Top + S(7), pw, S(16)));
@@ -3201,7 +3257,7 @@ namespace AntigravityHud
 
                 if ((d.IsToday || isYest) && colHov)
                 {
-                    FillRoundCard(g, new Rectangle(cx + S(3), rc.Top, colW - S(6), rc.Height), S(6), ColHoverFill, Color.FromArgb(219, 234, 254));
+                    FillRoundCard(g, new Rectangle(cx + S(3), rc.Top, colW - S(6), rc.Height), S(6), ColHoverFill, ColHoverBorder);
                 }
 
                 int trackW = Math.Min(S(24), colW - S(14));
@@ -3217,8 +3273,8 @@ namespace AntigravityHud
 
                 var rcTrack = new Rectangle(trackX, trackY, trackW, trackH);
                 FillRoundCard(g, rcTrack, S(5),
-                    isFocusedBar ? Color.FromArgb(224, 234, 248) : Color.FromArgb(234, 238, 244),
-                    isFocusedBar ? Color.FromArgb(191, 219, 254) : Color.FromArgb(234, 238, 244));
+                    isFocusedBar ? ColAccentSoft : Pal.ChartBarEmptyBg,
+                    isFocusedBar ? ColHoverBorder : Pal.ChartBarEmptyBg);
 
                 if (d.Tokens > 0)
                 {
@@ -3227,18 +3283,18 @@ namespace AntigravityHud
                     Color cTop, cBot;
                     if (d.IsToday)
                     {
-                        cTop = Color.FromArgb(13, 148, 136);
-                        cBot = Color.FromArgb(15, 118, 110);
+                        cTop = Pal.IsDark ? Color.FromArgb(45, 212, 191) : Color.FromArgb(13, 148, 136);
+                        cBot = Pal.IsDark ? Color.FromArgb(20, 184, 166) : Color.FromArgb(15, 118, 110);
                     }
                     else if (isFocusedBar || (isYest && _ledgerPeriod == PeriodTab.Today))
                     {
-                        cTop = Color.FromArgb(37, 99, 235);
-                        cBot = Color.FromArgb(29, 78, 216);
+                        cTop = Pal.IsDark ? Color.FromArgb(96, 165, 250) : Color.FromArgb(37, 99, 235);
+                        cBot = Pal.IsDark ? Color.FromArgb(59, 130, 246) : Color.FromArgb(29, 78, 216);
                     }
                     else
                     {
-                        cTop = Color.FromArgb(100, 116, 139);
-                        cBot = Color.FromArgb(71, 85, 105);
+                        cTop = Pal.IsDark ? Color.FromArgb(124, 134, 150) : Color.FromArgb(100, 116, 139);
+                        cBot = Pal.IsDark ? Color.FromArgb(92, 100, 114) : Color.FromArgb(71, 85, 105);
                     }
                     using (var br = new LinearGradientBrush(rcFill, cTop, cBot, 90f))
                     using (GraphicsPath gp = CreateRoundPath(rcFill, S(5)))
@@ -3269,7 +3325,7 @@ namespace AntigravityHud
             bool isPosLocked = cfg != null && cfg.PositionLocked;
 
             var rcBar = new Rectangle(x, y, w, h);
-            FillRoundCard(g, rcBar, S(8), ColCardBg, hasMemWarn ? Color.FromArgb(252, 211, 77) : ColCardBorder);
+            FillRoundCard(g, rcBar, S(8), ColCardBg, hasMemWarn ? ColWarnBorder : ColCardBorder);
 
             int cy = y + h / 2;
             Color mgDotCol = mg.IsMemHigh ? ColDanger : (hasMemWarn ? ColWarn : ColOk);
@@ -3304,18 +3360,18 @@ namespace AntigravityHud
 
             bool autoHover = _rcAutoGcBtn.Contains(_mousePt);
             Color autoBg = mg.AutoGuardEnabled
-                ? (autoHover ? Color.FromArgb(198, 244, 224) : ColOkSoft)
+                ? (autoHover ? (Pal.IsDark ? Color.FromArgb(30, 72, 58) : Color.FromArgb(198, 244, 224)) : ColOkSoft)
                 : (autoHover ? ColHoverFill : ColSubtleFill);
-            Color autoBd = mg.AutoGuardEnabled ? Color.FromArgb(110, 231, 183) : ColCardBorder;
+            Color autoBd = mg.AutoGuardEnabled ? ColOkBorder : ColCardBorder;
             Color autoFg = mg.AutoGuardEnabled ? ColOkText : ColTextSub;
             FillRoundCard(g, _rcAutoGcBtn, S(5), autoBg, autoBd);
             DrawCenteredText(g, guardTxt, fSmallBold, autoFg, _rcAutoGcBtn);
 
             bool cleanHover = _rcCleanMemBtn.Contains(_mousePt);
             Color clBg = hasMemWarn
-                ? (cleanHover ? Color.FromArgb(253, 230, 138) : ColWarnSoft)
+                ? (cleanHover ? (Pal.IsDark ? Color.FromArgb(84, 62, 26) : Color.FromArgb(253, 230, 138)) : ColWarnSoft)
                 : (cleanHover ? ColAccentSoft : ColSubtleFill);
-            Color clBd = hasMemWarn ? Color.FromArgb(245, 158, 11) : (cleanHover ? ColAccent : ColCardBorder);
+            Color clBd = hasMemWarn ? ColWarnBorder : (cleanHover ? ColAccent : ColCardBorder);
             Color clFg = hasMemWarn ? ColWarnText : (cleanHover ? ColAccent : ColTextMain);
             FillRoundCard(g, _rcCleanMemBtn, S(5), clBg, clBd);
             DrawCenteredText(g, cleanTxt, fSmallBold, clFg, _rcCleanMemBtn);
@@ -3337,7 +3393,7 @@ namespace AntigravityHud
 
             if (hasExtLedger)
             {
-                Color apiDotCol = hasExtConv ? ColWarn : (hasExtToday ? ColOk : Color.FromArgb(156, 163, 175));
+                Color apiDotCol = hasExtConv ? ColWarn : (hasExtToday ? ColOk : ColTextMuted);
                 DrawStatusDot(g, divX + S(10), cy, S(6), apiDotCol, false);
 
                 Font apiFont = (hasExtConv || hasExtToday) ? fSmallBold : fSmall;
@@ -3359,7 +3415,7 @@ namespace AntigravityHud
                 return;
             }
 
-            Color posDotCol = isCustomPos ? ColAccent : (isPosLocked ? ColWarn : Color.FromArgb(156, 163, 175));
+            Color posDotCol = isCustomPos ? ColAccent : (isPosLocked ? ColWarn : ColTextMuted);
             DrawStatusDot(g, divX + S(10), cy, S(6), posDotCol, false);
 
             string rightTxt;
@@ -3577,11 +3633,11 @@ namespace AntigravityHud
 
         private static void GetToneColors(string tone, out Color bg, out Color fg)
         {
-            if (tone == "carbon") { bg = Color.FromArgb(226, 232, 240); fg = Color.FromArgb(15, 23, 42); }
-            else if (tone == "neon") { bg = Color.FromArgb(204, 251, 241); fg = Color.FromArgb(13, 148, 136); }
-            else if (tone == "argon") { bg = ColAccentSoft; fg = ColAccent; }
-            else if (tone == "fast") { bg = ColOkSoft; fg = ColOkText; }
-            else { bg = Color.FromArgb(234, 237, 242); fg = ColTextSub; }
+            if (tone == "carbon") { bg = Pal.ToneCarbonBg; fg = Pal.ToneCarbonFg; }
+            else if (tone == "neon") { bg = Pal.ToneNeonBg; fg = Pal.ToneNeonFg; }
+            else if (tone == "argon") { bg = Pal.ToneArgonBg; fg = Pal.ToneArgonFg; }
+            else if (tone == "fast") { bg = Pal.ToneFastBg; fg = Pal.ToneFastFg; }
+            else { bg = Pal.ToneMutedBg; fg = Pal.ToneMutedFg; }
         }
 
         private static string FmtCostSub(double usd, int convCount)

@@ -440,32 +440,33 @@ namespace AntigravityHud
                     g.Clear(Color.Transparent);
 
                     var rcPill = new Rectangle(1, 1, computedW - 2, _barHeight - 2);
+                    ThemePalette pal = ThemeManager.ForBar();
                     Color bgCol;
                     Color bdCol;
                     float bdWidth;
 
                     if (_isDragging)
                     {
-                        bgCol = Color.FromArgb(252, 239, 246, 255);
-                        bdCol = Color.FromArgb(255, 37, 99, 235);
+                        bgCol = pal.PillBgDrag;
+                        bdCol = pal.PillBorderDrag;
                         bdWidth = 1.9f;
                     }
                     else if (_popupOpen)
                     {
-                        bgCol = Color.FromArgb(250, 240, 247, 255);
-                        bdCol = Color.FromArgb(245, 59, 130, 246);
+                        bgCol = pal.PillBgOpen;
+                        bdCol = pal.PillBorderActive;
                         bdWidth = 1.5f;
                     }
                     else if (_hovered)
                     {
-                        bgCol = Color.FromArgb(252, 255, 255, 255);
-                        bdCol = Color.FromArgb(245, 59, 130, 246);
+                        bgCol = pal.PillBgHover;
+                        bdCol = pal.PillBorderActive;
                         bdWidth = 1.5f;
                     }
                     else
                     {
-                        bgCol = Color.FromArgb(246, 255, 255, 255);
-                        bdCol = running ? Color.FromArgb(220, 16, 185, 129) : Color.FromArgb(215, 198, 208, 220);
+                        bgCol = pal.PillBg;
+                        bdCol = running ? pal.PillBorderRun : pal.PillBorderIdle;
                         bdWidth = 1.1f;
                     }
 
@@ -497,12 +498,13 @@ namespace AntigravityHud
             bool isLabeled, bool isMinimal,
             Font fBold, Font fReg, Font fMono)
         {
-            Color colMain = Color.FromArgb(24, 24, 27);
-            Color colSub = Color.FromArgb(100, 106, 118);
-            Color colDiv = Color.FromArgb(216, 222, 230);
-            Color colOk = Color.FromArgb(16, 185, 129);
-            Color colWarn = Color.FromArgb(245, 158, 11);
-            Color colDanger = Color.FromArgb(239, 68, 68);
+            ThemePalette pal = ThemeManager.ForBar();
+            Color colMain = pal.TextMain;
+            Color colSub = pal.TextSub;
+            Color colDiv = pal.Divider;
+            Color colOk = pal.Ok;
+            Color colWarn = pal.Warn;
+            Color colDanger = pal.Danger;
 
             int padEnd = isLabeled ? 10 : 9;
             int sepPad = isLabeled ? 5 : 4;
@@ -518,7 +520,7 @@ namespace AntigravityHud
                     int dotSz = Math.Max(2, S(2.1f));
                     int gx = x;
                     int gy0 = cy - S(4.2f);
-                    using (var brGrip = new SolidBrush(Color.FromArgb(210, 37, 99, 235)))
+                    using (var brGrip = new SolidBrush(pal.Accent))
                     {
                         for (int r = 0; r < 3; r++)
                         {
@@ -537,7 +539,7 @@ namespace AntigravityHud
             if (draw)
             {
                 var rcRing = new Rectangle(x, cy - ringD / 2, ringD, ringD);
-                using (var penTrack = new Pen(Color.FromArgb(212, 218, 226), S(2.1f)))
+                using (var penTrack = new Pen(pal.TrackBg, S(2.1f)))
                 {
                     g.DrawEllipse(penTrack, rcRing);
                 }
@@ -572,7 +574,7 @@ namespace AntigravityHud
             int dotD = S(6);
             if (draw)
             {
-                Color cDot = totalTurns <= 1 ? Color.FromArgb(156, 163, 175)
+                Color cDot = totalTurns <= 1 ? pal.TextMuted
                     : (cPct >= 75 ? colOk : (cPct >= 35 ? colWarn : colDanger));
                 using (var br = new SolidBrush(cDot))
                 {
@@ -589,7 +591,7 @@ namespace AntigravityHud
             x = StepSep(g, x + S(sepPad), cy, S(12), colDiv, sepPad, draw);
 
             // 3. Speed t/s or Live Thinking Elapsed Counter
-            Color tpsCol = hudIsRunningColor(running, sTps) ? Color.FromArgb(5, 150, 105) : colMain;
+            Color tpsCol = hudIsRunningColor(running, sTps) ? pal.OkText : colMain;
             x += MeasureOrDrawStr(g, sTps, fBold, tpsCol, x, cy, draw);
 
             x = StepSep(g, x + S(sepPad), cy, S(12), colDiv, sepPad, draw);
@@ -599,11 +601,11 @@ namespace AntigravityHud
             {
                 x += MeasureOrDrawStr(g, iqLbl + " ", fReg, colSub, x, cy, draw);
             }
-            Color iqBg = Color.FromArgb(232, 236, 242);
-            Color iqFg = colSub;
-            if (iqLv == "ok") { iqBg = Color.FromArgb(224, 242, 254); iqFg = Color.FromArgb(2, 132, 199); }
-            else if (iqLv == "warn") { iqBg = Color.FromArgb(254, 243, 199); iqFg = Color.FromArgb(180, 83, 9); }
-            else if (iqLv == "danger") { iqBg = Color.FromArgb(254, 226, 226); iqFg = Color.FromArgb(220, 38, 38); }
+            Color iqBg = pal.IqIdleBg;
+            Color iqFg = pal.IqIdleFg;
+            if (iqLv == "ok") { iqBg = pal.IqOkBg; iqFg = pal.IqOkFg; }
+            else if (iqLv == "warn") { iqBg = pal.WarnSoft; iqFg = pal.WarnText; }
+            else if (iqLv == "danger") { iqBg = pal.DangerSoft; iqFg = pal.DangerText; }
 
             x += MeasureOrDrawChip(g, iqPill, fMono, iqBg, iqFg, x, cy, S(8), chipPad, draw);
             x += S(padEnd);
@@ -692,7 +694,7 @@ namespace AntigravityHud
 
             HudSnapshot h = _data != null ? _data.ActiveHud : null;
             TurnItem l = h != null ? h.Latest : null;
-            string sig = string.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}",
+            string sig = string.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}",
                 l != null ? l.TotalUsed : 0,
                 l != null ? l.CacheHitPct : 0,
                 l != null && l.Tps.HasValue ? l.Tps.Value : -1,
@@ -702,6 +704,7 @@ namespace AntigravityHud
                 h != null && h.IsRunning ? h.ActiveElapsedSec : 0,
                 _scaleMode,
                 _config != null ? _config.BarStyle : "compact",
+                ThemeManager.IsBarDark ? "D" : "L",
                 I18n.IsZh ? "ZH" : "EN",
                 (_hovered ? "H" : "") + (_popupOpen ? "P" : "") + (_isDragging ? "D" : ""));
 

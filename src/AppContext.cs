@@ -39,6 +39,7 @@ namespace AntigravityHud
 
             _config = ConfigStore.Load();
             I18n.SetLanguage(_config.Language);
+            ThemeManager.SetMode(_config.ThemeMode);
 
             _engine = new LocalTelemetryEngine(userProfile, _config.AutoMemoryGuard);
 
@@ -46,6 +47,7 @@ namespace AntigravityHud
                 dpiScale,
                 _config,
                 onSetBarStyle: SetBarStyle,
+                onSetThemeMode: SetThemeMode,
                 onToggleLockPos: () =>
                 {
                     _config.PositionLocked = !_config.PositionLocked;
@@ -126,6 +128,7 @@ namespace AntigravityHud
             _bar.Show();
 
             SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+            SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
 
             PollActiveAntigravityWindowTitle(true);
             RefreshAll(true);
@@ -194,6 +197,33 @@ namespace AntigravityHud
             {
                 _bar.RenderLayered(true);
                 _bar.EnsureDockedAndZOrder();
+            }
+        }
+
+        private void SetThemeMode(string themeMode)
+        {
+            _config.ThemeMode = themeMode;
+            ConfigStore.Save(_config);
+            ThemeManager.SetMode(themeMode);
+            ApplyThemeAcrossWindows();
+        }
+
+        private void ApplyThemeAcrossWindows()
+        {
+            if (_bar != null && !_bar.IsDisposed) _bar.RenderLayered(true);
+            if (_popup != null && !_popup.IsDisposed) _popup.RefreshThemeChrome();
+            if (_contextMenu != null && !_contextMenu.IsDisposed) _contextMenu.RefreshThemeChrome();
+        }
+
+        private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+        {
+            if (e.Category == UserPreferenceCategory.General || e.Category == UserPreferenceCategory.Color)
+            {
+                ThemeManager.RefreshSystemTheme(true);
+                if (_bar != null && !_bar.IsDisposed && _bar.IsHandleCreated)
+                {
+                    try { _bar.BeginInvoke(new Action(ApplyThemeAcrossWindows)); } catch { }
+                }
             }
         }
 
@@ -414,6 +444,7 @@ namespace AntigravityHud
         private void ExitCleanly()
         {
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
             _timer.Stop();
             _winTitleWatchTimer.Stop();
             _outsideClickTimer.Stop();

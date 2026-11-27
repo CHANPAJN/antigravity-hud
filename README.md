@@ -8,18 +8,23 @@ English | [简体中文](README.zh-CN.md)
 [![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-2563EB?style=flat-square)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-0%20(Built--in%20csc.exe)-10B981?style=flat-square)](#quick-start)
 
-> **Windows Only · Zero Client Intrusion** — Built to keep your official Google Antigravity client **completely clean and untouched**. Runs as an independent ~218 KB Win32 layered floating capsule with zero Electron, zero Node.js, zero third-party packages, and zero client file patching.
+> **Windows Only · Built for One Single Purpose: Never Touch the Client** — The **only reason** this tool exists as an external overlay is to keep your official Google Antigravity client **100% intact and spotless**: zero `app.asar` patching, zero injected UI panels, zero IDE extensions, zero network calls, and zero credential access. Pure C# Win32 (~225 KB), zero third-party dependencies.
 
 <p align="center">
-  <img src="docs/preview-bar.png" alt="Floating Taskbar Capsule" width="320" />
+  <img src="docs/preview-bar.png" alt="Floating Taskbar Capsule (Default Light)" width="320" />
 </p>
 
 <p align="center">
-  <img src="docs/preview-hud.png" alt="Window HUD View" width="40%" />
+  <img src="docs/preview-hud.png" alt="Window HUD View (Default Light)" width="40%" />
   &nbsp;
-  <img src="docs/preview-ledger.png" alt="Global Ledger View" width="40%" />
+  <img src="docs/preview-ledger.png" alt="Global Ledger View (Default Light)" width="40%" />
   &nbsp;
   <img src="docs/preview-menu.png" alt="Modern Right-Click Flyout Menu" width="16%" />
+</p>
+
+<p align="center">
+  <img src="docs/preview-dark-box.png" alt="Optional Native Dark Mode Showcase" width="68%" /><br/>
+  <sub>Default light mode shown above · Native Windows Dark Mode also built in (follows system theme by default, or switch <code>Auto / Light / Dark</code> anytime in the right-click menu).</sub>
 </p>
 
 ---
@@ -31,7 +36,9 @@ English | [简体中文](README.zh-CN.md)
   - **Smart Auto-Placement**: detects Windows 11 centered vs. left-aligned taskbars and Widgets state — prefers the open **left taskbar slot** on Win11 centered taskbars, uses the right slot on Win10/left-aligned taskbars, and automatically floats cleanly just above the taskbar on compact laptop screens so it never covers your app icons or system tray.
   - **Click** to toggle the detailed HUD & ledger panel without stealing focus from Antigravity.
   - **Long-press (≥ 260 ms) or drag** to freely move the capsule anywhere across single or multiple monitors.
-  - **Modern Right-Click Flyout**: native Win11 rounded menu with an inline 3-way width switcher (`Min` / `Compact` / `Labeled`), position lock toggle, one-click reset, `EN / ZH` toggle, login autostart toggle, and logs folder shortcut.
+  - **Modern Right-Click Flyout**: native Win11 rounded menu with inline 3-way switchers for capsule width (`Min` / `Compact` / `Labeled`) and appearance (`Auto` / `Light` / `Dark`), plus position lock toggle, one-click reset, `EN / ZH` toggle, login autostart toggle, and logs folder shortcut.
+- **Native Windows Light & Dark Theme**
+  - Defaults to **`Auto`** (tracks `SystemUsesLightTheme` for the floating capsule and `AppsUseLightTheme` for the popup & menu in real time) with a clean light palette and a neutral graphite dark palette; override anytime from the right-click menu.
   - **Smart Edge & Taskbar Snapping**: magnetically snaps to screen edges and the Windows taskbar centerline (hold `Alt` while dragging for pixel-level fine placement).
   - **Drift-Free Anchoring**: remembers left/right screen alignment in `%LOCALAPPDATA%\AntigravityHUD\config.json` so dynamic capsule width changes never shift off-screen.
   - **Smart Popup Placement**: automatically opens above the bar near the taskbar, flips below when placed near the top of a display, and stays clamped inside the active monitor's working area.

@@ -8,26 +8,30 @@ English | [简体中文](README.zh-CN.md)
 [![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-2563EB?style=flat-square)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-0%20(Built--in%20csc.exe)-10B981?style=flat-square)](#quick-start)
 
-> **Windows Only** — Built specifically for **Windows 10 / 11** with pure C# WinForms + Win32 Layered Windows (`UpdateLayeredWindow`). Zero Electron, zero Node.js, zero third-party packages, and zero client file patching.
+> **Windows Only · Zero Client Intrusion** — Built to keep your official Google Antigravity client **completely clean and untouched**. Runs as an independent ~218 KB Win32 layered floating capsule with zero Electron, zero Node.js, zero third-party packages, and zero client file patching.
 
 <p align="center">
   <img src="docs/preview-bar.png" alt="Floating Taskbar Capsule" width="320" />
 </p>
 
 <p align="center">
-  <img src="docs/preview-hud.png" alt="Window HUD View" width="48%" />
+  <img src="docs/preview-hud.png" alt="Window HUD View" width="40%" />
   &nbsp;
-  <img src="docs/preview-ledger.png" alt="Global Ledger View" width="48%" />
+  <img src="docs/preview-ledger.png" alt="Global Ledger View" width="40%" />
+  &nbsp;
+  <img src="docs/preview-menu.png" alt="Modern Right-Click Flyout Menu" width="16%" />
 </p>
 
 ---
 
 ## Features
 
+- **Keep Antigravity Untouched**: No injected UI panels, no `app.asar` modification, no extra IDE extensions cluttering your workspace — works across Antigravity Main, Insiders, and CLI simultaneously.
 - **Floating Capsule Bar (Smart Free-Space Placement + Long-Press to Move)**
   - **Smart Auto-Placement**: detects Windows 11 centered vs. left-aligned taskbars and Widgets state — prefers the open **left taskbar slot** on Win11 centered taskbars, uses the right slot on Win10/left-aligned taskbars, and automatically floats cleanly just above the taskbar on compact laptop screens so it never covers your app icons or system tray.
   - **Click** to toggle the detailed HUD & ledger panel without stealing focus from Antigravity.
   - **Long-press (≥ 260 ms) or drag** to freely move the capsule anywhere across single or multiple monitors.
+  - **Modern Right-Click Flyout**: native Win11 rounded menu with an inline 3-way width switcher (`Min` / `Compact` / `Labeled`), position lock toggle, one-click reset, `EN / ZH` toggle, login autostart toggle, and logs folder shortcut.
   - **Smart Edge & Taskbar Snapping**: magnetically snaps to screen edges and the Windows taskbar centerline (hold `Alt` while dragging for pixel-level fine placement).
   - **Drift-Free Anchoring**: remembers left/right screen alignment in `%LOCALAPPDATA%\AntigravityHUD\config.json` so dynamic capsule width changes never shift off-screen.
   - **Smart Popup Placement**: automatically opens above the bar near the taskbar, flips below when placed near the top of a display, and stays clamped inside the active monitor's working area.

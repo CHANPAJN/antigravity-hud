@@ -22,7 +22,9 @@ try {
         @{ Name = "hud_zh.png"; Args = @("hud", "--lang", "zh", "--demo") },
         @{ Name = "ledger_en.png"; Args = @("ledger", "--lang", "en", "--demo") },
         @{ Name = "ledger_zh.png"; Args = @("ledger", "--lang", "zh", "--demo") },
-        @{ Name = "drill_en.png"; Args = @("drill", "--lang", "en", "--demo") }
+        @{ Name = "drill_en.png"; Args = @("drill", "--lang", "en", "--demo") },
+        @{ Name = "menu_en.png"; Args = @("menu", "--lang", "en") },
+        @{ Name = "menu_zh.png"; Args = @("menu", "--lang", "zh") }
     )
 
     foreach ($c in $cases) {

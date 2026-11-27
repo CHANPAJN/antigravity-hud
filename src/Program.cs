@@ -130,6 +130,16 @@ namespace AntigravityHud
                     ? DemoDataFactory.BuildDemoDashboard(false)
                     : eng.Query("", true);
 
+                if (mode == "menu")
+                {
+                    var mCfg = new UserConfig { Language = langArg, AnchorMode = "custom", BarStyle = "compact", PositionLocked = false };
+                    using (var menuFrm = new ModernContextMenuForm(dpi, mCfg, null, null, null, null, null, null, null, () => false))
+                    {
+                        menuFrm.RenderOffscreenToPng(outPng);
+                    }
+                    return;
+                }
+
                 if (mode == "bar")
                 {
                     using (var bar = new TaskbarCapsuleBarForm(dpi, cfg, null, null, null))

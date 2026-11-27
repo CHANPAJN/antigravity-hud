@@ -19,7 +19,7 @@ namespace AntigravityHud
         private readonly float _dpi;
         private readonly Action _onLeftTogglePopup;
         private readonly Action _onPositionChanged;
-        private readonly ContextMenuStrip _rightMenu;
+        private readonly Action<Point> _onRightShowMenu;
         private readonly UserConfig _config;
         private readonly System.Windows.Forms.Timer _longPressTimer;
 
@@ -43,13 +43,13 @@ namespace AntigravityHud
             UserConfig config,
             Action onLeftTogglePopup,
             Action onPositionChanged,
-            ContextMenuStrip rightMenu)
+            Action<Point> onRightShowMenu)
         {
             _dpi = dpiScale;
             _config = config ?? new UserConfig();
             _onLeftTogglePopup = onLeftTogglePopup;
             _onPositionChanged = onPositionChanged;
-            _rightMenu = rightMenu;
+            _onRightShowMenu = onRightShowMenu;
 
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
@@ -178,10 +178,10 @@ namespace AntigravityHud
                     _longPressTimer.Start();
                 }
             }
-            else if (e.Button == MouseButtons.Right && _rightMenu != null)
+            else if (e.Button == MouseButtons.Right && _onRightShowMenu != null)
             {
                 CancelPendingPress();
-                _rightMenu.Show(Cursor.Position);
+                _onRightShowMenu(Cursor.Position);
             }
         }
 

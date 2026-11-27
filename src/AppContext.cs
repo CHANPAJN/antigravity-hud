@@ -15,7 +15,7 @@ namespace AntigravityHud
         private readonly LocalTelemetryEngine _engine;
         private readonly TrayPopupForm _popup;
         private readonly TaskbarCapsuleBarForm _bar;
-        private readonly ContextMenuStrip _trayMenu;
+        private readonly ModernContextMenuForm _contextMenu;
         private readonly System.Windows.Forms.Timer _timer;
         private readonly System.Windows.Forms.Timer _winTitleWatchTimer;
         private readonly System.Windows.Forms.Timer _outsideClickTimer;
@@ -30,8 +30,6 @@ namespace AntigravityHud
 
         private string _selectedConvKey = "";
         private bool _wasMouseDown;
-        private Font _menuFontReg;
-        private Font _menuFontBold;
 
         public TaskbarAppContext()
         {
@@ -44,8 +42,26 @@ namespace AntigravityHud
 
             _engine = new LocalTelemetryEngine(userProfile, _config.AutoMemoryGuard);
 
-            _trayMenu = new ContextMenuStrip { ShowImageMargin = true };
-            RebuildTrayMenu();
+            _contextMenu = new ModernContextMenuForm(
+                dpiScale,
+                _config,
+                onSetBarStyle: SetBarStyle,
+                onToggleLockPos: () =>
+                {
+                    _config.PositionLocked = !_config.PositionLocked;
+                    ConfigStore.Save(_config);
+                    if (_popup != null && _popup.Visible) _popup.Invalidate();
+                },
+                onResetPos: ResetBarPosition,
+                onToggleLang: ToggleLanguageAndRefresh,
+                onToggleAutostart: () =>
+                {
+                    ConfigStore.SetAutostart(!ConfigStore.IsAutostartEnabled(), Application.ExecutablePath);
+                },
+                onOpenLogs: OpenBrainFolder,
+                onExitApp: ExitCleanly,
+                getAutostart: ConfigStore.IsAutostartEnabled
+            );
 
             _popup = new TrayPopupForm(
                 dpiScale,
@@ -106,7 +122,7 @@ namespace AntigravityHud
                 _config,
                 TogglePopupFromBar,
                 OnBarPositionChanged,
-                _trayMenu);
+                ShowModernContextMenu);
             _bar.Show();
 
             SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
@@ -154,10 +170,19 @@ namespace AntigravityHud
             ConfigStore.Save(_config);
         }
 
+        private void ShowModernContextMenu(Point screenPt)
+        {
+            if (_popup != null && _popup.Visible) _popup.Hide();
+            if (_contextMenu != null && !_contextMenu.IsDisposed)
+            {
+                _contextMenu.ShowNearPoint(screenPt, _bar.GetActualScreenBounds());
+            }
+        }
+
         private void OnBarPositionChanged()
         {
             ConfigStore.Save(_config);
-            RebuildTrayMenu();
+            if (_contextMenu != null && _contextMenu.Visible) _contextMenu.Invalidate();
             if (_popup != null && _popup.Visible) _popup.Invalidate();
         }
 
@@ -165,7 +190,6 @@ namespace AntigravityHud
         {
             _config.BarStyle = style;
             ConfigStore.Save(_config);
-            RebuildTrayMenu();
             if (_bar != null && !_bar.IsDisposed)
             {
                 _bar.RenderLayered(true);
@@ -192,114 +216,10 @@ namespace AntigravityHud
             _config.Language = nextLang;
             ConfigStore.Save(_config);
             _engine.InvalidateLanguageCache();
-            RebuildTrayMenu();
             RefreshAll(false);
             if (_bar != null && !_bar.IsDisposed) _bar.RenderLayered(true);
             if (_popup != null && !_popup.IsDisposed) _popup.Invalidate();
-        }
-
-        private void RebuildTrayMenu()
-        {
-            _trayMenu.Items.Clear();
-            Font oldReg = _menuFontReg;
-            Font oldBold = _menuFontBold;
-            _menuFontReg = new Font(I18n.UiFontFamily, 9.0f, FontStyle.Regular, GraphicsUnit.Point);
-            _menuFontBold = new Font(_menuFontReg, FontStyle.Bold);
-            _trayMenu.Font = _menuFontReg;
-            if (oldBold != null) oldBold.Dispose();
-            if (oldReg != null) oldReg.Dispose();
-
-            var miOpen = new ToolStripMenuItem(I18n.T("展开详细 HUD 看板", "Open HUD Dashboard"))
-            {
-                Font = _menuFontBold
-            };
-            miOpen.Click += (s, e) => OpenPopupNearBar();
-
-            var miLockPos = new ToolStripMenuItem(I18n.T("锁定胶囊位置", "Lock Bar Position"))
-            {
-                Checked = _config.PositionLocked
-            };
-            miLockPos.Click += (s, e) =>
-            {
-                _config.PositionLocked = !_config.PositionLocked;
-                ConfigStore.Save(_config);
-                RebuildTrayMenu();
-                if (_popup != null && _popup.Visible) _popup.Invalidate();
-            };
-
-            var miResetPos = new ToolStripMenuItem(I18n.T("重置到默认任务栏位置", "Reset to Taskbar Default"))
-            {
-                Enabled = string.Equals(_config.AnchorMode, "custom", StringComparison.OrdinalIgnoreCase)
-            };
-            miResetPos.Click += (s, e) => ResetBarPosition();
-
-            string curStyle = _config.BarStyle ?? "compact";
-            var miStyleRoot = new ToolStripMenuItem(I18n.T("胶囊宽度样式", "Capsule Bar Style"));
-            var miStyleCompact = new ToolStripMenuItem(I18n.T("干练四项 (默认)", "Compact (Default)"))
-            {
-                Checked = string.Equals(curStyle, "compact", StringComparison.OrdinalIgnoreCase)
-            };
-            miStyleCompact.Click += (s, e) => SetBarStyle("compact");
-
-            var miStyleLabeled = new ToolStripMenuItem(I18n.T("带文字标签 (缓存/思考)", "Labeled (Cache/Think)"))
-            {
-                Checked = string.Equals(curStyle, "labeled", StringComparison.OrdinalIgnoreCase)
-            };
-            miStyleLabeled.Click += (s, e) => SetBarStyle("labeled");
-
-            var miStyleMinimal = new ToolStripMenuItem(I18n.T("极致短小 (小屏)", "Minimal (Ultra-Short)"))
-            {
-                Checked = string.Equals(curStyle, "minimal", StringComparison.OrdinalIgnoreCase)
-            };
-            miStyleMinimal.Click += (s, e) => SetBarStyle("minimal");
-
-            miStyleRoot.DropDownItems.Add(miStyleCompact);
-            miStyleRoot.DropDownItems.Add(miStyleLabeled);
-            miStyleRoot.DropDownItems.Add(miStyleMinimal);
-
-            var miLang = new ToolStripMenuItem(I18n.T("Switch to English (EN)", "切换为简体中文 (中文)"));
-            miLang.Click += (s, e) => ToggleLanguageAndRefresh();
-
-            var miCleanMem = new ToolStripMenuItem(I18n.T("释放内存与临时缓存", "Trim Memory & Temp Cache"));
-            miCleanMem.Click += (s, e) =>
-            {
-                _engine.MemGuard.CleanAndTrimNow(false);
-                RefreshAll(true);
-            };
-
-            var miRefresh = new ToolStripMenuItem(I18n.T("立即刷新数据", "Refresh Now"));
-            miRefresh.Click += (s, e) => RefreshAll(true);
-
-            var miFolder = new ToolStripMenuItem(I18n.T("打开本地会话日志目录", "Open Local Logs Folder"));
-            miFolder.Click += (s, e) => OpenBrainFolder();
-
-            bool autoStartOn = ConfigStore.IsAutostartEnabled();
-            var miAutostart = new ToolStripMenuItem(I18n.T("开机自动启动", "Launch at Windows Login"))
-            {
-                Checked = autoStartOn
-            };
-            miAutostart.Click += (s, e) =>
-            {
-                ConfigStore.SetAutostart(!ConfigStore.IsAutostartEnabled(), Application.ExecutablePath);
-                RebuildTrayMenu();
-            };
-
-            var miExit = new ToolStripMenuItem(I18n.T("退出 Antigravity HUD", "Exit Antigravity HUD"));
-            miExit.Click += (s, e) => ExitCleanly();
-
-            _trayMenu.Items.Add(miOpen);
-            _trayMenu.Items.Add(new ToolStripSeparator());
-            _trayMenu.Items.Add(miStyleRoot);
-            _trayMenu.Items.Add(miLockPos);
-            _trayMenu.Items.Add(miResetPos);
-            _trayMenu.Items.Add(miLang);
-            _trayMenu.Items.Add(new ToolStripSeparator());
-            _trayMenu.Items.Add(miCleanMem);
-            _trayMenu.Items.Add(miRefresh);
-            _trayMenu.Items.Add(miFolder);
-            _trayMenu.Items.Add(miAutostart);
-            _trayMenu.Items.Add(new ToolStripSeparator());
-            _trayMenu.Items.Add(miExit);
+            if (_contextMenu != null && !_contextMenu.IsDisposed) _contextMenu.Invalidate();
         }
 
         private void OnDisplaySettingsChanged(object sender, EventArgs e)
@@ -445,6 +365,7 @@ namespace AntigravityHud
 
         private void TogglePopupFromBar()
         {
+            if (_contextMenu != null && _contextMenu.Visible) _contextMenu.Hide();
             if (_popup.Visible)
             {
                 _popup.Hide();
@@ -501,11 +422,9 @@ namespace AntigravityHud
                 NativeMethods.UnhookWinEvent(_winEventHook);
                 _winEventHook = IntPtr.Zero;
             }
+            if (_contextMenu != null && !_contextMenu.IsDisposed) _contextMenu.Close();
             if (_popup != null && !_popup.IsDisposed) _popup.Close();
             if (_bar != null && !_bar.IsDisposed) _bar.Close();
-            if (_trayMenu != null && !_trayMenu.IsDisposed) _trayMenu.Dispose();
-            if (_menuFontBold != null) { _menuFontBold.Dispose(); _menuFontBold = null; }
-            if (_menuFontReg != null) { _menuFontReg.Dispose(); _menuFontReg = null; }
             Application.Exit();
         }
     }

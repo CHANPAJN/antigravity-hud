@@ -61,7 +61,7 @@ namespace AntigravityHud
                     ModelSwitchedCold = true,
                     IsCacheDropWarn = true,
                     SwitchedFromTag = "Argon·H",
-                    ColdCacheReason = I18n.TF("换模重热 ({0}→{1}) · 载入 {2}", "Model warm-up ({0} -> {1}) · {2}", "Argon·H", "Carbon·H", "165k"),
+                    ColdCacheReason = I18n.TF("切换模型重建缓存 ({0}→{1}) · 载入 {2}", "Model cache rebuild ({0} -> {1}) · {2}", "Argon·H", "Carbon·H", "165k"),
                     ToolSummary = I18n.GetToolLabel("edit_file") + " · " + I18n.GetToolLabel("run_command")
                 },
                 new TurnItem
@@ -111,22 +111,22 @@ namespace AntigravityHud
             var catBreakdowns = new Dictionary<string, List<BreakdownRowItem>>(StringComparer.OrdinalIgnoreCase);
             catBreakdowns["system"] = new List<BreakdownRowItem>
             {
-                new BreakdownRowItem { Label = I18n.T("内置指令与原生工具底座", "Built-in System & Core Tools"), SubNote = I18n.T("宿主提示词与核心工具声明", "Host prompt and core tool schemas"), Tokens = 24800, SharePct = 50.1 },
-                new BreakdownRowItem { Label = I18n.T("全局工程规则 (Rules)", "Global Rules"), SubNote = I18n.TF("{0} 份常驻规则文件", "{0} active rule files", 3), Tokens = 11200, SharePct = 22.6 },
-                new BreakdownRowItem { Label = I18n.T("技能路由目录 (Skills)", "Skills Catalog"), SubNote = I18n.TF("{0} 项已挂载技能摘要", "{0} loaded skill summaries", 12), Tokens = 6800, SharePct = 13.7 },
-                new BreakdownRowItem { Label = I18n.T("MCP 服务与工具索引", "MCP Servers & Schemas"), SubNote = I18n.TF("{0} 个已连接 MCP 服务", "{0} connected MCP servers", 2), Tokens = 6700, SharePct = 13.6 }
+                new BreakdownRowItem { Label = I18n.T("内置指令与工具声明", "Built-in Prompt & Tools"), SubNote = I18n.T("系统提示词与核心工具定义", "System prompt and core tool schemas"), Tokens = 24800, SharePct = 50.1 },
+                new BreakdownRowItem { Label = I18n.T("用户规则 (Rules)", "User Rules"), SubNote = I18n.TF("{0} 份规则文件", "{0} active rule files", 3), Tokens = 11200, SharePct = 22.6 },
+                new BreakdownRowItem { Label = I18n.T("技能目录 (Skills)", "Skills Catalog"), SubNote = I18n.TF("{0} 项已加载技能摘要", "{0} loaded skill summaries", 12), Tokens = 6800, SharePct = 13.7 },
+                new BreakdownRowItem { Label = I18n.T("MCP 服务与工具", "MCP Servers & Tools"), SubNote = I18n.TF("{0} 个已连接 MCP 服务", "{0} connected MCP servers", 2), Tokens = 6700, SharePct = 13.6 }
             };
             catBreakdowns["results"] = new List<BreakdownRowItem>
             {
-                new BreakdownRowItem { Label = I18n.GetToolLabel("read_file"), SubNote = I18n.TF("累计触发 {0} 次 · 占总窗 {1:F1}%", "{0} calls · {1:F1}% of window", 34, 21.8), Tokens = 51200, SharePct = 44.8 },
-                new BreakdownRowItem { Label = I18n.GetToolLabel("run_command"), SubNote = I18n.TF("累计触发 {0} 次 · 占总窗 {1:F1}%", "{0} calls · {1:F1}% of window", 19, 14.5), Tokens = 34100, SharePct = 29.9 },
-                new BreakdownRowItem { Label = I18n.GetToolLabel("edit_file"), SubNote = I18n.TF("累计触发 {0} 次 · 占总窗 {1:F1}%", "{0} calls · {1:F1}% of window", 15, 7.9), Tokens = 18600, SharePct = 16.3 },
-                new BreakdownRowItem { Label = I18n.GetToolLabel("grep_search"), SubNote = I18n.TF("累计触发 {0} 次 · 占总窗 {1:F1}%", "{0} calls · {1:F1}% of window", 9, 4.4), Tokens = 10300, SharePct = 9.0 }
+                new BreakdownRowItem { Label = I18n.GetToolLabel("read_file"), SubNote = I18n.TF("触发 {0} 次 · 占窗口 {1:F1}%", "{0} calls · {1:F1}% of window", 34, 21.8), Tokens = 51200, SharePct = 44.8 },
+                new BreakdownRowItem { Label = I18n.GetToolLabel("run_command"), SubNote = I18n.TF("触发 {0} 次 · 占窗口 {1:F1}%", "{0} calls · {1:F1}% of window", 19, 14.5), Tokens = 34100, SharePct = 29.9 },
+                new BreakdownRowItem { Label = I18n.GetToolLabel("edit_file"), SubNote = I18n.TF("触发 {0} 次 · 占窗口 {1:F1}%", "{0} calls · {1:F1}% of window", 15, 7.9), Tokens = 18600, SharePct = 16.3 },
+                new BreakdownRowItem { Label = I18n.GetToolLabel("grep_search"), SubNote = I18n.TF("触发 {0} 次 · 占窗口 {1:F1}%", "{0} calls · {1:F1}% of window", 9, 4.4), Tokens = 10300, SharePct = 9.0 }
             };
             catBreakdowns["assistant"] = new List<BreakdownRowItem>
             {
-                new BreakdownRowItem { Label = I18n.T("内部思考链推演 (Thinking)", "Internal Reasoning (Thinking)"), SubNote = I18n.TF("占总输出 {0:F0}% · 保障推理深度", "{0:F0}% of output · reasoning depth", 39), Tokens = 24500, SharePct = 39.0 },
-                new BreakdownRowItem { Label = I18n.T("可见正文与工具调用参数", "Visible Replies & Tool Args"), SubNote = I18n.TF("共 {0} 轮 · 单轮峰值 #{1} ({2})", "{0} turns · peak #{1} ({2})", 24, 96, "2.4k"), Tokens = 38300, SharePct = 61.0 }
+                new BreakdownRowItem { Label = I18n.T("内部思考 (Thinking)", "Internal Reasoning (Thinking)"), SubNote = I18n.TF("占总输出 {0:F0}% · 推理深度参考", "{0:F0}% of output · reasoning depth", 39), Tokens = 24500, SharePct = 39.0 },
+                new BreakdownRowItem { Label = I18n.T("正文回复与工具参数", "Visible Replies & Tool Args"), SubNote = I18n.TF("共 {0} 轮 · 单轮峰值 #{1} ({2})", "{0} turns · peak #{1} ({2})", 24, 96, "2.4k"), Tokens = 38300, SharePct = 61.0 }
             };
             catBreakdowns["user"] = new List<BreakdownRowItem>
             {
@@ -195,7 +195,7 @@ namespace AntigravityHud
                         CacheHitPct = 95.1,
                         IsWorking = false,
                         ElapsedSec = 0,
-                        LastAction = I18n.T("已完成汇报", "Completed report")
+                        LastAction = I18n.T("已完成", "Completed")
                     },
                     new SubagentBriefItem
                     {
@@ -211,14 +211,14 @@ namespace AntigravityHud
                         CacheHitPct = 93.0,
                         IsWorking = false,
                         ElapsedSec = 0,
-                        LastAction = I18n.T("已完成汇报", "Completed report")
+                        LastAction = I18n.T("已完成", "Completed")
                     }
                 },
                 TopSources = new List<SourceBlock>
                 {
                     new SourceBlock { Category = "results", Name = I18n.T("工具返回结果", "Tool Outputs"), Tokens = 114200, Count = 77 },
                     new SourceBlock { Category = "assistant", Name = I18n.T("助手思考与回复", "Assistant & Thinking"), Tokens = 62800, Count = 24 },
-                    new SourceBlock { Category = "system", Name = I18n.T("系统与 MCP 底座", "System & MCP Base"), Tokens = 49500, Count = 17 },
+                    new SourceBlock { Category = "system", Name = I18n.T("系统与 MCP", "System & MCP"), Tokens = 49500, Count = 17 },
                     new SourceBlock { Category = "user", Name = I18n.T("用户提问消息", "User Prompts"), Tokens = 8500, Count = 14 }
                 },
                 CategoryBreakdowns = catBreakdowns

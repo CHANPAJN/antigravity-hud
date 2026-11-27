@@ -171,7 +171,7 @@ namespace AntigravityHud
                     }
                     else if (mode == "hud_sys")
                     {
-                        frm.SetPreviewMode(HudCard2Mode.Breakdown, "system", I18n.T("系统底座与折叠摘要", "System Base & Summary"), LedgerRankMode.ByModel, TurnQuickFilter.All);
+                        frm.SetPreviewMode(HudCard2Mode.Breakdown, "system", I18n.T("系统提示与摘要", "System & Summary"), LedgerRankMode.ByModel, TurnQuickFilter.All);
                     }
                     else if (mode == "hud_res")
                     {

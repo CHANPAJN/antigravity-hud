@@ -1,19 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
-using Microsoft.Win32;
 
 namespace AntigravityHud
 {
@@ -68,6 +60,7 @@ namespace AntigravityHud
         private readonly Action _onResetPosition;
         private readonly Func<UserConfig> _getConfig;
         private readonly ContextMenuStrip _convMenu;
+        private Font _convMenuFont;
 
         // Interactive hit regions
         private Rectangle _rcConvPicker;
@@ -150,12 +143,18 @@ namespace AntigravityHud
         private static readonly Color ColDangerText = Color.FromArgb(220, 38, 38);
         private static readonly Color ColDangerSoft = Color.FromArgb(254, 226, 226);
 
-        // Precision Industrial Palette (Graphite / Cobalt / Sea-Teal / Amber — zero AI purple)
+        // Precision Industrial Palette (Graphite / Cobalt / Sea-Teal / Amber)
         private static readonly Color ColCatSys = Color.FromArgb(71, 85, 105);
         private static readonly Color ColCatTools = Color.FromArgb(100, 116, 139);
         private static readonly Color ColCatUser = Color.FromArgb(217, 119, 6);
         private static readonly Color ColCatResp = Color.FromArgb(13, 148, 136);
         private static readonly Color ColCatRes = Color.FromArgb(37, 99, 235);
+
+        // Shared GDI+ StringFormat instances (zero per-frame allocation / zero handle leak)
+        private static readonly StringFormat SfNearEllipsis = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
+        private static readonly StringFormat SfFarNoWrap = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap };
+        private static readonly StringFormat SfFarEllipsis = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
+        private static readonly StringFormat SfNearCenter = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
 
         public int LastDeactivateTick
         {
@@ -214,10 +213,11 @@ namespace AntigravityHud
             Width = S(468);
             Height = S(556);
 
+            _convMenuFont = new Font(I18n.UiFontFamily, 9.0f, FontStyle.Regular, GraphicsUnit.Point);
             _convMenu = new ContextMenuStrip
             {
                 ShowImageMargin = false,
-                Font = new Font(I18n.UiFontFamily, 9.0f, FontStyle.Regular, GraphicsUnit.Point)
+                Font = _convMenuFont
             };
             _convMenu.Closed += (s, e) => { _suppressDeactivate = false; };
 
@@ -428,9 +428,9 @@ namespace AntigravityHud
                     if (h.IsSubagent && !string.IsNullOrEmpty(h.ParentConvKey))
                         newHover = I18n.TF("点击返回主窗口 ({0})", "Back to main chat ({0})", h.ParentTitle);
                     else if (_hudCard2Mode == HudCard2Mode.Subagents)
-                        newHover = I18n.T("点击收起子智能体并发工作台，返回响应明细", "Close subagents view and return to turns");
+                        newHover = I18n.T("收起子任务列表，返回响应明细", "Close subagents and return to turns");
                     else
-                        newHover = I18n.TF("点击展开 {0} 个子智能体进度与角色明细，支持一键切入子窗口透视", "View {0} subagents and inspect their context", h.SubagentCount);
+                        newHover = I18n.TF("查看 {0} 个子任务进度，点行可进入对应窗口", "View {0} subagents; click a row to inspect", h.SubagentCount);
                 }
                 else if (_rcCard2TabTurns.Contains(e.Location))
                 {
@@ -448,11 +448,11 @@ namespace AntigravityHud
                 {
                     newHover = _turnFilter == TurnQuickFilter.SlowWait
                         ? I18n.T("再次点击恢复显示全部轮次", "Click again to show all turns")
-                        : I18n.T("筛选触发自动折叠压缩或消息队列等待 ≥ 6s 的轮次（纯只读日志不含流式首字 TTFT）", "Filter turns with compaction or queue wait >= 6s");
+                        : I18n.T("仅看触发上下文压缩或等待 ≥ 6s 的轮次", "Filter compacted or slow (>=6s) turns");
                 }
                 else if (_rcTurnFilterWarn.Contains(e.Location))
                 {
-                    newHover = _turnFilter == TurnQuickFilter.CacheWarn ? I18n.T("再次点击恢复显示全部轮次", "Click again to show all turns") : I18n.T("仅筛选换模重热或缓存命中下跌的轮次", "Filter model warm-up or cache-drop turns");
+                    newHover = _turnFilter == TurnQuickFilter.CacheWarn ? I18n.T("再次点击恢复显示全部轮次", "Click again to show all turns") : I18n.T("仅看切换模型或缓存命中下降的轮次", "Filter model switch or cache-drop turns");
                 }
 
                 if (string.IsNullOrEmpty(newHover) && _hudCard2Mode == HudCard2Mode.Subagents)
@@ -462,7 +462,7 @@ namespace AntigravityHud
                         if (_subagentRowHits[i].Key.Contains(e.Location))
                         {
                             SubagentBriefItem sb = _subagentRowHits[i].Value;
-                            newHover = I18n.TF("点击切入子代理「{0}」完整 HUD 视角 · 共 {1} 轮 · 缓存 {2:F1}%", "Inspect subagent [{0}] · {1} turns · cache {2:F1}%",
+                            newHover = I18n.TF("点击进入子任务「{0}」· 共 {1} 轮 · 缓存 {2:F1}%", "Inspect subagent [{0}] · {1} turns · cache {2:F1}%",
                                 sb.RoleTitle, sb.Turns, sb.CacheHitPct);
                             break;
                         }
@@ -1147,7 +1147,10 @@ namespace AntigravityHud
         {
             _convMenu.Items.Clear();
 
-            _convMenu.Font = new Font(I18n.UiFontFamily, 9.0f, FontStyle.Regular, GraphicsUnit.Point);
+            Font oldMf = _convMenuFont;
+            _convMenuFont = new Font(I18n.UiFontFamily, 9.0f, FontStyle.Regular, GraphicsUnit.Point);
+            _convMenu.Font = _convMenuFont;
+            if (oldMf != null) oldMf.Dispose();
 
             string latestTitle = _data.RecentOptions.Count > 0 ? _data.RecentOptions[0].Title : I18n.T("当前活跃窗口", "Active Window");
             var miAuto = new ToolStripMenuItem(I18n.TF("自动跟随最新活跃窗口 ({0})", "Auto-follow active window ({0})", latestTitle))
@@ -1228,6 +1231,16 @@ namespace AntigravityHud
 
             _suppressDeactivate = true;
             _convMenu.Show(this, new Point(_rcConvPicker.Left, _rcConvPicker.Bottom + S(2)));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_convMenu != null && !_convMenu.IsDisposed) _convMenu.Dispose();
+                if (_convMenuFont != null) { _convMenuFont.Dispose(); _convMenuFont = null; }
+            }
+            base.Dispose(disposing);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -1384,7 +1397,7 @@ namespace AntigravityHud
                 var rcSafe = new Rectangle(rcSegWrap.Right - badgeW - S(4), y + S(4), badgeW, navWrapH - S(8));
                 FillRoundCard(g, rcSafe, S(12), ColOkSoft, Color.FromArgb(167, 243, 208));
                 DrawStatusDot(g, rcSafe.Left + S(11), rcSafe.Top + rcSafe.Height / 2, S(6), ColOk, false);
-                DrawTxtL(g, I18n.T("纯只读·0外联", "Read-Only·Local"), fMetaBold, ColOkText,
+                DrawTxtL(g, I18n.T("纯本地·0外联", "Local · Offline"), fMetaBold, ColOkText,
                     new Rectangle(rcSafe.Left + S(19), rcSafe.Top, rcSafe.Width - S(22), rcSafe.Height));
 
                 y += navWrapH + S(8);
@@ -1450,110 +1463,6 @@ namespace AntigravityHud
                 {
                     g.DrawPath(penOut, gpOut);
                 }
-            }
-        }
-
-        private void DrawTopCapsuleSegments(
-            Graphics g, Rectangle rc, HudSnapshot hud, long budget,
-            Font fBold, Font fReg, Font fMono)
-        {
-            TurnItem lat = hud != null ? hud.Latest : null;
-            long used = lat != null ? lat.TotalUsed : 0L;
-            double rawPct = budget > 0 ? Math.Min(100.0, Math.Max(0.0, used * 100.0 / budget)) : 0.0;
-            int pctRound = (rawPct > 0 && rawPct < 1.0) ? 1 : (int)Math.Round(rawPct);
-
-            int cy = rc.Top + rc.Height / 2;
-            int x = rc.Left + S(10);
-
-            // Segment 1: Vector Progress Ring + Pct + Used
-            int ringD = S(14);
-            var rcRing = new Rectangle(x, cy - ringD / 2, ringD, ringD);
-            using (var penTrack = new Pen(Color.FromArgb(215, 220, 228), S(2.2f)))
-            {
-                g.DrawEllipse(penTrack, rcRing);
-            }
-            Color ringCol = rawPct >= 88 ? ColDanger : (rawPct >= 72 ? ColWarn : ColOk);
-            if (rawPct > 0.5)
-            {
-                using (var penArc = new Pen(ringCol, S(2.2f)) { StartCap = LineCap.Round, EndCap = LineCap.Round })
-                {
-                    g.DrawArc(penArc, rcRing, -90f, (float)(360.0 * rawPct / 100.0));
-                }
-            }
-            x += ringD + S(5);
-
-            string sPct = pctRound + "%";
-            x += DrawInlineText(g, sPct, fBold, ColTextMain, x, cy) + S(3);
-            if (used > 0)
-            {
-                x += DrawInlineText(g, FmtCompact(used), fReg, ColTextSub, x, cy);
-            }
-
-            x = DrawPillDivider(g, x + S(6), cy, S(13));
-
-            // Segment 2: Cache Hit %
-            double cPct = lat != null ? lat.CacheHitPct : 0.0;
-            Color cDotCol = (hud == null || hud.TotalTurns <= 1) ? Color.FromArgb(156, 163, 175)
-                : (cPct >= 75 ? ColOk : (cPct >= 35 ? ColWarn : ColDanger));
-            DrawStatusDot(g, x + S(4), cy, S(6), cDotCol, cPct >= 75);
-            x += S(11);
-            x += DrawInlineText(g, I18n.T("缓存 ", "Cache "), fReg, ColTextSub, x, cy);
-            string cacheTxt = (hud != null && hud.TotalTurns <= 1 && cPct < 0.5) ? I18n.T("首轮", "1st") : (Math.Round(cPct) + "%");
-            x += DrawInlineText(g, cacheTxt, fBold, ColTextMain, x, cy);
-
-            x = DrawPillDivider(g, x + S(6), cy, S(13));
-
-            // Segment 3: Live Elapsed Timer while Thinking/Running, or Last Completed Turn Speed t/s
-            if (hud != null && hud.IsRunning && hud.ActiveElapsedSec > 0)
-            {
-                string liveStr = hud.ActivePhaseLabel + " · " + hud.ActiveElapsedSec + "s";
-                x += DrawInlineText(g, liveStr, fBold, ColOkText, x, cy);
-            }
-            else
-            {
-                string tpsStr = "-- t/s";
-                if (lat != null && lat.Tps.HasValue)
-                {
-                    tpsStr = Math.Round(lat.Tps.Value) + " t/s" +
-                             (lat.DurationSec.HasValue ? (" · " + Math.Round(lat.DurationSec.Value) + "s") : "");
-                }
-                else if (lat != null && lat.DurationSec.HasValue)
-                {
-                    tpsStr = Math.Round(lat.DurationSec.Value) + "s";
-                }
-                x += DrawInlineText(g, tpsStr, fBold, ColTextMain, x, cy);
-            }
-
-            x = DrawPillDivider(g, x + S(6), cy, S(13));
-
-            // Segment 4: Model Tag + Turn Count
-            string mTag = lat != null ? lat.ShortTag : I18n.T("待命", "Idle");
-            string mTone = lat != null ? lat.Tone : "muted";
-            Color tagBg, tagFg;
-            GetToneColors(mTone, out tagBg, out tagFg);
-            x += DrawChipTag(g, mTag, fMono, tagBg, tagFg, x, cy, S(5)) + S(4);
-            if (hud != null && hud.TotalTurns > 0)
-            {
-                x += DrawInlineText(g, I18n.TF("{0}轮", "{0}t", hud.TotalTurns), fReg, ColTextSub, x, cy);
-            }
-
-            x = DrawPillDivider(g, x + S(6), cy, S(13));
-
-            // Segment 5: Thinking IQ Pill (only if space fits)
-            if (x < rc.Right - S(42))
-            {
-                string iqLbl = hud != null ? hud.IqLabel : I18n.T("思考", "Think");
-                string iqPill = hud != null ? hud.IqPill : "--";
-                string iqLv = hud != null ? hud.IqLevel : "idle";
-                x += DrawInlineText(g, iqLbl + " ", fReg, ColTextSub, x, cy);
-
-                Color iqBg = Color.FromArgb(228, 232, 238);
-                Color iqFg = ColTextSub;
-                if (iqLv == "ok") { iqBg = Color.FromArgb(224, 242, 254); iqFg = Color.FromArgb(2, 132, 199); }
-                else if (iqLv == "warn") { iqBg = ColWarnSoft; iqFg = ColWarnText; }
-                else if (iqLv == "danger") { iqBg = ColDangerSoft; iqFg = ColDangerText; }
-
-                DrawChipTag(g, iqPill, fMono, iqBg, iqFg, x, cy, S(8));
             }
         }
 
@@ -2012,21 +1921,21 @@ namespace AntigravityHud
                     Title = turnsCnt > 0 ? I18n.TF("模型思考与历史回复 ({0}轮)", "Thinking & Replies ({0}t)", turnsCnt) : I18n.T("模型思考与历史回复", "Thinking & Replies"),
                     Tok = respTok,
                     Col = ColCatResp,
-                    Tip = I18n.TF("累计 {0} 轮模型思考链与正文输出  ·  单击展开占比体检", "{0} turns of reasoning & replies  ·  Click to inspect", turnsCnt)
+                    Tip = I18n.TF("累计 {0} 轮思考与正文输出  ·  单击查看明细", "{0} turns of reasoning & replies  ·  Click to inspect", turnsCnt)
                 },
                 new
                 {
                     Cat = "system",
-                    Title = (hud != null && hud.Compacted) ? I18n.T("系统底座与折叠摘要", "System Base & Summary") : I18n.T("系统规则与工具底座", "System Rules & Tools"),
+                    Title = (hud != null && hud.Compacted) ? I18n.T("系统提示与摘要", "System & Summary") : I18n.T("系统规则与工具", "System & Tools"),
                     Tok = sysAndTools,
                     Col = ColCatSys,
                     Tip = (hud != null
                         ? (hud.SysSummaryTokens > 0
-                            ? I18n.TF("规则 {0} · 技能 {1} · 底座/MCP {2} · 摘要 {3}", "Rules {0} · Skills {1} · Base/MCP {2} · Sum {3}",
+                            ? I18n.TF("规则 {0} · 技能 {1} · 系统/MCP {2} · 摘要 {3}", "Rules {0} · Skills {1} · Sys/MCP {2} · Sum {3}",
                                 FmtCompact(hud.SysRulesTokens), FmtCompact(hud.SysSkillsTokens), FmtCompact(hud.SysMcpCoreTokens), FmtCompact(hud.SysSummaryTokens))
-                            : I18n.TF("规则 {0} · 技能 {1} · 底座/MCP {2}", "Rules {0} · Skills {1} · Base/MCP {2}",
+                            : I18n.TF("规则 {0} · 技能 {1} · 系统/MCP {2}", "Rules {0} · Skills {1} · Sys/MCP {2}",
                                 FmtCompact(hud.SysRulesTokens), FmtCompact(hud.SysSkillsTokens), FmtCompact(hud.SysMcpCoreTokens)))
-                        : I18n.T("系统规则与工具底座", "System Rules & Tools")) + I18n.T("  ·  单击展开底座体检", "  ·  Click to inspect")
+                        : I18n.T("系统规则与工具", "System & Tools")) + I18n.T("  ·  单击查看明细", "  ·  Click to inspect")
                 },
                 new
                 {
@@ -2222,8 +2131,8 @@ namespace AntigravityHud
             bool hasScroll = items.Count > visCap;
             int innerW = hasScroll ? (w - S(8)) : w;
 
-            var sfL = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
-            var sfR = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap };
+            StringFormat sfL = SfNearEllipsis;
+            StringFormat sfR = SfFarNoWrap;
 
             int startY = y;
             int valW = S(96);
@@ -2556,7 +2465,7 @@ namespace AntigravityHud
             }
             else
             {
-                kpi3Label = I18n.T("历史总吞吐", "Total Throughput");
+                kpi3Label = I18n.T("累计总消耗", "All-Time Total");
                 kpi3Val = FmtBigZh(_data.AllTimeTokens);
                 kpi3Sub = I18n.TF("总缓存命中 {0:F1}%", "Avg cache hit {0:F1}%", _data.AllTimeCachePct);
                 kpi3Col = ColAccent;
@@ -2584,7 +2493,7 @@ namespace AntigravityHud
             int cy = rcChart.Top + S(8);
 
             DrawLeftRightRow(g, I18n.T("近7日消耗趋势", "7-Day Token Trend"), fTitle, ColTextMain,
-                I18n.T("点今日/昨日可快切 · 本地真实日志", "Click Today/Yest to switch · Local logs"), fSmall, ColTextSub, ix, cy, iw, S(20));
+                I18n.T("点击今日/昨日可快切", "Click Today / Yest to switch"), fSmall, ColTextSub, ix, cy, iw, S(20));
             cy += S(23);
             using (var pen = new Pen(ColCardBorder, 1f)) { g.DrawLine(pen, ix, cy, ix + iw, cy); }
             cy += S(5);
@@ -2835,8 +2744,7 @@ namespace AntigravityHud
             int titleW = Math.Max(S(60), rcHead.Right - S(6) - pTotalW - S(6) - titleLeft);
             using (var brMain = new SolidBrush(ColTextMain))
             {
-                var sfT = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
-                g.DrawString(dd.ModelName, fBodyBold, brMain, new RectangleF(titleLeft, rcHead.Top, titleW, headH), sfT);
+                g.DrawString(dd.ModelName, fBodyBold, brMain, new RectangleF(titleLeft, rcHead.Top, titleW, headH), SfNearEllipsis);
             }
 
             y += headH + S(8);
@@ -2888,8 +2796,7 @@ namespace AntigravityHud
             {
                 using (var brSub = new SolidBrush(ColTextSub))
                 {
-                    var sfNone = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
-                    g.DrawString(I18n.T("该周期内该模型未调用工具", "No tools invoked by this model"), fSmall, brSub, new RectangleF(ix, ty, iw, S(21)), sfNone);
+                    g.DrawString(I18n.T("该周期内该模型未调用工具", "No tools invoked by this model"), fSmall, brSub, new RectangleF(ix, ty, iw, S(21)), SfNearCenter);
                 }
             }
             else
@@ -3006,10 +2913,8 @@ namespace AntigravityHud
                     using (var brMain = new SolidBrush(hov ? ColAccent : ColTextMain))
                     using (var brTot = new SolidBrush(ColTextMain))
                     {
-                        var sfL = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
-                        var sfR = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap };
-                        g.DrawString(r.Title, fBodyBold, brMain, new RectangleF(rx, ry, titleMaxW, S(16)), sfL);
-                        g.DrawString(totTxt, fMonoSmall, brTot, new RectangleF(rx + titleMaxW, ry, totW, S(16)), sfR);
+                        g.DrawString(r.Title, fBodyBold, brMain, new RectangleF(rx, ry, titleMaxW, S(16)), SfNearEllipsis);
+                        g.DrawString(totTxt, fMonoSmall, brTot, new RectangleF(rx + titleMaxW, ry, totW, S(16)), SfFarNoWrap);
                     }
                     ry += S(19);
 
@@ -3061,8 +2966,8 @@ namespace AntigravityHud
                 int cTool = S(84);
                 int cTitle = Math.Max(S(60), tblW - cTime - cTot - cCache - cTool);
 
-                var sfL = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
-                var sfR = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
+                StringFormat sfL = SfNearEllipsis;
+                StringFormat sfR = SfFarEllipsis;
 
                 using (var brSub = new SolidBrush(ColTextSub))
                 {
@@ -3380,8 +3285,8 @@ namespace AntigravityHud
 
             int btnH = S(22);
             int btnY = cy - btnH / 2;
-            string guardTxt = I18n.T("防爆:", "Guard:") + (mg.AutoGuardEnabled ? I18n.T("开", "On") : I18n.T("关", "Off"));
-            string cleanTxt = hasMemWarn ? I18n.T("清残留", "Clean") : I18n.T("释存", "Trim");
+            string guardTxt = I18n.T("省存:", "AutoTrim:") + (mg.AutoGuardEnabled ? I18n.T("开", "On") : I18n.T("关", "Off"));
+            string cleanTxt = hasMemWarn ? I18n.T("清缓存", "Clean") : I18n.T("释存", "Trim");
             int btnAutoW = Math.Max(S(54), MeasureTxtW(g, guardTxt, fSmallBold) + S(14));
             int btnCleanW = Math.Max(S(44), MeasureTxtW(g, cleanTxt, fSmallBold) + S(14));
             int memTxtW = MeasureTxtW(g, memLbl, fSmallBold) + S(6);
@@ -3507,7 +3412,7 @@ namespace AntigravityHud
             }
             else
             {
-                leftStatus = I18n.TF("本地只读监控就绪 · 同步于 {0:HH:mm:ss}", "Local read-only telemetry ready · {0:HH:mm:ss}", _data.RefreshedAt);
+                leftStatus = I18n.TF("本地监控就绪 · 同步于 {0:HH:mm:ss}", "Local telemetry ready · {0:HH:mm:ss}", _data.RefreshedAt);
             }
 
             DrawTxtL(g, leftStatus, fSmall, statusCol, new Rectangle(x + S(2), y, _rcOpenFolder.Left - x - S(8), h));
@@ -3629,21 +3534,6 @@ namespace AntigravityHud
             }
         }
 
-        private static void DrawFourPointStar(Graphics g, float cx, float cy, float r, Color col)
-        {
-            float ri = r * 0.36f;
-            var pts = new PointF[8];
-            for (int i = 0; i < 8; i++)
-            {
-                double ang = -Math.PI / 2 + i * (Math.PI / 4);
-                float rad = (i % 2 == 0) ? r : ri;
-                pts[i] = new PointF(cx + (float)(Math.Cos(ang) * rad), cy + (float)(Math.Sin(ang) * rad));
-            }
-            using (var br = new SolidBrush(col))
-            {
-                g.FillPolygon(br, pts);
-            }
-        }
 
         private void DrawLeftRightRow(Graphics g, string leftTxt, Font fL, Color cL, string rightTxt, Font fR, Color cR, int x, int y, int w, int h)
         {
@@ -3692,16 +3582,6 @@ namespace AntigravityHud
             else if (tone == "argon") { bg = ColAccentSoft; fg = ColAccent; }
             else if (tone == "fast") { bg = ColOkSoft; fg = ColOkText; }
             else { bg = Color.FromArgb(234, 237, 242); fg = ColTextSub; }
-        }
-
-        private static void GetCategoryTreemapStyle(string cat, out Color bg, out Color bd)
-        {
-            if (cat == "system") { bg = Color.FromArgb(245, 236, 254); bd = Color.FromArgb(216, 180, 254); }
-            else if (cat == "tools") { bg = Color.FromArgb(235, 244, 255); bd = Color.FromArgb(147, 197, 253); }
-            else if (cat == "user") { bg = Color.FromArgb(228, 249, 240); bd = Color.FromArgb(110, 231, 183); }
-            else if (cat == "response") { bg = Color.FromArgb(255, 241, 229); bd = Color.FromArgb(253, 186, 116); }
-            else if (cat == "results") { bg = Color.FromArgb(255, 235, 240); bd = Color.FromArgb(253, 164, 175); }
-            else { bg = Color.FromArgb(238, 240, 244); bd = Color.FromArgb(209, 213, 219); }
         }
 
         private static string FmtCostSub(double usd, int convCount)

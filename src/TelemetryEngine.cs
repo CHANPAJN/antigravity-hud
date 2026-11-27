@@ -1,19 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Windows.Forms;
-using Microsoft.Win32;
 
 namespace AntigravityHud
 {
@@ -1189,7 +1180,7 @@ namespace AntigravityHud
 
                         addSource("system", I18n.T("用户全局规则 (Rules)", "Global Rules"), rShare);
                         addSource("system", I18n.T("技能目录索引 (Skills)", "Skills Index"), sShare);
-                        addSource("system", I18n.T("系统与 MCP 底座", "System & MCP Base"), mShare);
+                        addSource("system", I18n.T("系统与 MCP", "System & MCP"), mShare);
                         if (activeSummaryPart > 0)
                             addSource("system", I18n.T("历史对话折叠摘要", "Compacted Summary"), activeSummaryPart);
 
@@ -1363,7 +1354,7 @@ namespace AntigravityHud
                     }
                     else if (switchedCold)
                     {
-                        coldReason = I18n.TF("换模重热 ({0}→{1}) · 载入 {2}", "Model warm-up ({0}->{1}) · {2}",
+                        coldReason = I18n.TF("切换模型重建缓存 ({0}→{1}) · 载入 {2}", "Model cache rebuild ({0}->{1}) · {2}",
                             prevShortTag, shortTag, TrayPopupForm.FmtCompact(inTok));
                     }
                     else if (isCacheDrop)
@@ -1374,7 +1365,7 @@ namespace AntigravityHud
                     else if (turns.Count >= 1 && inTok >= 30000 && cacheHitPct < 10.0)
                     {
                         isCacheDrop = true;
-                        coldReason = I18n.TF("缓存重热 · 全量载入 {0}", "Cache warm-up · {0}",
+                        coldReason = I18n.TF("重建缓存 · 载入 {0}", "Cache rebuild · {0}",
                             TrayPopupForm.FmtCompact(inTok));
                     }
 
@@ -1506,28 +1497,28 @@ namespace AntigravityHud
                 }
                 sysBreak.Add(new BreakdownRowItem
                 {
-                    Label = I18n.T("内置指令与原生工具底座", "Built-in System & Core Tools"),
-                    SubNote = I18n.T("宿主提示词与核心工具声明", "Host prompt & core tool schemas"),
+                    Label = I18n.T("内置指令与工具声明", "Built-in Prompt & Tools"),
+                    SubNote = I18n.T("系统提示词与核心工具定义", "System prompt & core tool schemas"),
                     Tokens = scaledCoreSys,
                     SharePct = scaledCoreSys * 100.0 / sysCombined
                 });
                 sysBreak.Add(new BreakdownRowItem
                 {
-                    Label = I18n.T("全局工程规则 (Rules)", "Global Rules"),
-                    SubNote = I18n.TF("{0} 份常驻规则文件", "{0} active rule files", _cachedRulesCount),
+                    Label = I18n.T("用户规则 (Rules)", "User Rules"),
+                    SubNote = I18n.TF("{0} 份规则文件", "{0} active rule files", _cachedRulesCount),
                     Tokens = scaledRules,
                     SharePct = scaledRules * 100.0 / sysCombined
                 });
                 sysBreak.Add(new BreakdownRowItem
                 {
-                    Label = I18n.T("技能路由目录 (Skills)", "Skills Catalog"),
-                    SubNote = I18n.TF("{0} 项已挂载技能摘要", "{0} mounted skill summaries", _cachedSkillsCount),
+                    Label = I18n.T("技能目录 (Skills)", "Skills Catalog"),
+                    SubNote = I18n.TF("{0} 项已加载技能摘要", "{0} loaded skill summaries", _cachedSkillsCount),
                     Tokens = scaledSkills,
                     SharePct = scaledSkills * 100.0 / sysCombined
                 });
                 sysBreak.Add(new BreakdownRowItem
                 {
-                    Label = I18n.T("MCP 服务与工具索引", "MCP Servers & Tools"),
+                    Label = I18n.T("MCP 服务与工具", "MCP Servers & Tools"),
                     SubNote = I18n.TF("{0} 个已连接 MCP 服务", "{0} connected MCP servers", _cachedMcpServerCount),
                     Tokens = scaledMcpDecl,
                     SharePct = scaledMcpDecl * 100.0 / sysCombined
@@ -1547,7 +1538,7 @@ namespace AntigravityHud
                     resBreak.Add(new BreakdownRowItem
                     {
                         Label = rs.Name,
-                        SubNote = I18n.TF("累计触发 {0} 次 · 占总窗 {1:F1}%", "{0} calls · {1:F1}% of window", rs.Count, adjT * 100.0 / denomAll),
+                        SubNote = I18n.TF("触发 {0} 次 · 占窗口 {1:F1}%", "{0} calls · {1:F1}% of window", rs.Count, adjT * 100.0 / denomAll),
                         Tokens = adjT,
                         SharePct = Math.Min(100.0, adjT * 100.0 / resDenom)
                     });
@@ -1587,14 +1578,14 @@ namespace AntigravityHud
                 var respBreak = new List<BreakdownRowItem>();
                 respBreak.Add(new BreakdownRowItem
                 {
-                    Label = I18n.T("内部思考链推演 (Thinking)", "Internal Reasoning (Thinking)"),
-                    SubNote = I18n.TF("占总输出 {0:F0}% · 保障推理深度", "{0:F0}% of output · reasoning depth", thinkRatio * 100.0),
+                    Label = I18n.T("内部思考 (Thinking)", "Internal Reasoning (Thinking)"),
+                    SubNote = I18n.TF("占总输出 {0:F0}% · 推理深度参考", "{0:F0}% of output · reasoning depth", thinkRatio * 100.0),
                     Tokens = thinkScaled,
                     SharePct = thinkScaled * 100.0 / respDenom
                 });
                 respBreak.Add(new BreakdownRowItem
                 {
-                    Label = I18n.T("可见正文与工具调用参数", "Visible Replies & Tool Args"),
+                    Label = I18n.T("正文回复与工具参数", "Visible Replies & Tool Args"),
                     SubNote = peakOutTurn != null ? I18n.TF("共 {0} 轮 · 单轮峰值 #{1} ({2})", "{0} turns · peak #{1} ({2})", turns.Count, peakOutTurn.TurnNo, TrayPopupForm.FmtCompact(peakOutTurn.OutTok)) : I18n.T("历史回复累计", "Cumulative assistant output"),
                     Tokens = replyScaled,
                     SharePct = replyScaled * 100.0 / respDenom
@@ -1712,12 +1703,12 @@ namespace AntigravityHud
                 if (st.IsWorking && activeElapsedSec >= 18 && actualUsed >= 380000 && pendingToolLabels.Count == 0)
                 {
                     liveBannerLv = "compact";
-                    liveBannerTxt = I18n.TF("高负载运行 ({0}s) · 处于对话折叠或全量重热阶段", "Heavy load ({0}s) · compacting or warming cache", activeElapsedSec);
+                    liveBannerTxt = I18n.TF("处理较慢 ({0}s) · 正在压缩上下文或重建缓存", "Slow step ({0}s) · compacting or rebuilding cache", activeElapsedSec);
                 }
                 else if (latest != null && latest.ModelSwitchedCold)
                 {
                     liveBannerLv = "cold_switch";
-                    liveBannerTxt = I18n.TF("换模重热 ({0} → {1}) · 全量载入 {2}", "Model warm-up ({0} -> {1}) · {2}",
+                    liveBannerTxt = I18n.TF("切换模型重建缓存 ({0} → {1}) · 载入 {2}", "Model cache rebuild ({0} -> {1}) · {2}",
                         latest.SwitchedFromTag, latest.ShortTag, TrayPopupForm.FmtCompact(latest.InTok));
                 }
                 else if (latest != null && latest.IsCacheDropWarn)
@@ -1907,7 +1898,7 @@ namespace AntigravityHud
                 double cPct = sPrompt > 0 ? Math.Round(sCache * 100.0 / sPrompt, 1) : 0.0;
                 string actTxt = !string.IsNullOrEmpty(subSt.LastActionSummary)
                     ? subSt.LastActionSummary
-                    : (subSt.IsWorking ? I18n.T("正在推演任务", "Working...") : I18n.T("已完成汇报", "Completed"));
+                    : (subSt.IsWorking ? I18n.T("运行中", "Working...") : I18n.T("已完成", "Completed"));
 
                 briefs.Add(new SubagentBriefItem
                 {

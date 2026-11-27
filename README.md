@@ -109,7 +109,7 @@ Antigravity HUD is designed to be auditable from top to bottom in plain C# sourc
 3. **Opt-In Side Effects Only**:
    - **Config file**: saved solely at `%LOCALAPPDATA%\AntigravityHUD\config.json` (position, monitor anchor, lock state, language, scale, auto-guard preference).
    - **Autostart**: disabled by default; written to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` only if you run `install.ps1 -Autostart` or check `Launch at Windows Login` in the menu.
-   - **Memory Guard & Cache Clean**: `Auto Guard` defaults to **`Off`**. When manually clicked (or explicitly enabled), it only deletes files inside Antigravity's `tempmediaStorage` and `crashes` folders and calls standard Win32 `EmptyWorkingSet` on Antigravity processes. It **never terminates any process** and never touches conversation logs.
+   - **Memory Helper & Cache Clean**: `AutoTrim` defaults to **`Off`**. When manually clicked (or explicitly enabled), it only deletes files inside Antigravity's `tempmediaStorage` and `crashes` folders and calls standard Win32 `EmptyWorkingSet` on Antigravity processes. It **never terminates any process** and never touches conversation logs.
 4. **Platform Boundary**:
    - **Windows 10 / 11 only**. macOS and Linux are intentionally not targeted because the capsule relies directly on Win32 layered windows (`WS_EX_LAYERED | WS_EX_NOACTIVATE`) and the Windows taskbar shell (`Shell_TrayWnd`).
 

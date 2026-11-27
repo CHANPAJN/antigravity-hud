@@ -622,13 +622,13 @@ namespace AntigravityHud
             if (draw)
             {
                 using (var br = new SolidBrush(col))
+                using (var sf = new StringFormat(StringFormat.GenericTypographic)
                 {
-                    var sf = new StringFormat(StringFormat.GenericTypographic)
-                    {
-                        Alignment = StringAlignment.Near,
-                        LineAlignment = StringAlignment.Center,
-                        FormatFlags = StringFormatFlags.NoWrap
-                    };
+                    Alignment = StringAlignment.Near,
+                    LineAlignment = StringAlignment.Center,
+                    FormatFlags = StringFormatFlags.NoWrap
+                })
+                {
                     g.DrawString(txt, font, br, new PointF(x, cy), sf);
                 }
             }
@@ -649,13 +649,13 @@ namespace AntigravityHud
                     g.FillPath(brBg, gp);
                 }
                 using (var brFg = new SolidBrush(fg))
+                using (var sf = new StringFormat(StringFormat.GenericTypographic)
                 {
-                    var sf = new StringFormat(StringFormat.GenericTypographic)
-                    {
-                        Alignment = StringAlignment.Center,
-                        LineAlignment = StringAlignment.Center,
-                        FormatFlags = StringFormatFlags.NoWrap
-                    };
+                    Alignment = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center,
+                    FormatFlags = StringFormatFlags.NoWrap
+                })
+                {
                     g.DrawString(txt, font, brFg, new PointF(rc.Left + rc.Width / 2f, cy), sf);
                 }
             }

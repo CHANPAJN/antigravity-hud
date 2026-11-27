@@ -34,6 +34,7 @@ if (-not $srcFiles -or $srcFiles.Count -eq 0) {
 
 $compileArgs = @(
     "/nologo",
+    "/warn:4",
     "/target:winexe",
     "/platform:anycpu",
     "/optimize+",

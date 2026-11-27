@@ -30,6 +30,8 @@ namespace AntigravityHud
 
         private string _selectedConvKey = "";
         private bool _wasMouseDown;
+        private Font _menuFontReg;
+        private Font _menuFontBold;
 
         public TaskbarAppContext()
         {
@@ -199,10 +201,18 @@ namespace AntigravityHud
         private void RebuildTrayMenu()
         {
             _trayMenu.Items.Clear();
-            _trayMenu.Font = new Font(I18n.UiFontFamily, 9.0f, FontStyle.Regular, GraphicsUnit.Point);
+            Font oldReg = _menuFontReg;
+            Font oldBold = _menuFontBold;
+            _menuFontReg = new Font(I18n.UiFontFamily, 9.0f, FontStyle.Regular, GraphicsUnit.Point);
+            _menuFontBold = new Font(_menuFontReg, FontStyle.Bold);
+            _trayMenu.Font = _menuFontReg;
+            if (oldBold != null) oldBold.Dispose();
+            if (oldReg != null) oldReg.Dispose();
 
-            var miOpen = new ToolStripMenuItem(I18n.T("展开详细 HUD 看板", "Open HUD Dashboard"));
-            miOpen.Font = new Font(_trayMenu.Font, FontStyle.Bold);
+            var miOpen = new ToolStripMenuItem(I18n.T("展开详细 HUD 看板", "Open HUD Dashboard"))
+            {
+                Font = _menuFontBold
+            };
             miOpen.Click += (s, e) => OpenPopupNearBar();
 
             var miLockPos = new ToolStripMenuItem(I18n.T("锁定胶囊位置", "Lock Bar Position"))
@@ -493,6 +503,9 @@ namespace AntigravityHud
             }
             if (_popup != null && !_popup.IsDisposed) _popup.Close();
             if (_bar != null && !_bar.IsDisposed) _bar.Close();
+            if (_trayMenu != null && !_trayMenu.IsDisposed) _trayMenu.Dispose();
+            if (_menuFontBold != null) { _menuFontBold.Dispose(); _menuFontBold = null; }
+            if (_menuFontReg != null) { _menuFontReg.Dispose(); _menuFontReg = null; }
             Application.Exit();
         }
     }

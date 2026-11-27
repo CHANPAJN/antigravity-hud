@@ -159,6 +159,18 @@ namespace AntigravityHud
             if (_popup != null && _popup.Visible) _popup.Invalidate();
         }
 
+        private void SetBarStyle(string style)
+        {
+            _config.BarStyle = style;
+            ConfigStore.Save(_config);
+            RebuildTrayMenu();
+            if (_bar != null && !_bar.IsDisposed)
+            {
+                _bar.RenderLayered(true);
+                _bar.EnsureDockedAndZOrder();
+            }
+        }
+
         private void ResetBarPosition()
         {
             if (_bar != null && !_bar.IsDisposed)
@@ -211,6 +223,30 @@ namespace AntigravityHud
             };
             miResetPos.Click += (s, e) => ResetBarPosition();
 
+            string curStyle = _config.BarStyle ?? "compact";
+            var miStyleRoot = new ToolStripMenuItem(I18n.T("胶囊宽度样式", "Capsule Bar Style"));
+            var miStyleCompact = new ToolStripMenuItem(I18n.T("干练四项 (默认)", "Compact (Default)"))
+            {
+                Checked = string.Equals(curStyle, "compact", StringComparison.OrdinalIgnoreCase)
+            };
+            miStyleCompact.Click += (s, e) => SetBarStyle("compact");
+
+            var miStyleLabeled = new ToolStripMenuItem(I18n.T("带文字标签 (缓存/思考)", "Labeled (Cache/Think)"))
+            {
+                Checked = string.Equals(curStyle, "labeled", StringComparison.OrdinalIgnoreCase)
+            };
+            miStyleLabeled.Click += (s, e) => SetBarStyle("labeled");
+
+            var miStyleMinimal = new ToolStripMenuItem(I18n.T("极致短小 (小屏)", "Minimal (Ultra-Short)"))
+            {
+                Checked = string.Equals(curStyle, "minimal", StringComparison.OrdinalIgnoreCase)
+            };
+            miStyleMinimal.Click += (s, e) => SetBarStyle("minimal");
+
+            miStyleRoot.DropDownItems.Add(miStyleCompact);
+            miStyleRoot.DropDownItems.Add(miStyleLabeled);
+            miStyleRoot.DropDownItems.Add(miStyleMinimal);
+
             var miLang = new ToolStripMenuItem(I18n.T("Switch to English (EN)", "切换为简体中文 (中文)"));
             miLang.Click += (s, e) => ToggleLanguageAndRefresh();
 
@@ -243,6 +279,7 @@ namespace AntigravityHud
 
             _trayMenu.Items.Add(miOpen);
             _trayMenu.Items.Add(new ToolStripSeparator());
+            _trayMenu.Items.Add(miStyleRoot);
             _trayMenu.Items.Add(miLockPos);
             _trayMenu.Items.Add(miResetPos);
             _trayMenu.Items.Add(miLang);

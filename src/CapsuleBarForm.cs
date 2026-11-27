@@ -387,14 +387,20 @@ namespace AntigravityHud
                 ? I18n.T("首轮", "1st")
                 : (Math.Round(cPct) + "%");
             bool activeHere = hud != null && hud.IsRunning && hud.ActiveElapsedSec > 0;
+            string style = (_config != null && !string.IsNullOrEmpty(_config.BarStyle)) ? _config.BarStyle : "compact";
+            bool isLabeled = string.Equals(style, "labeled", StringComparison.OrdinalIgnoreCase);
+            bool isMinimal = string.Equals(style, "minimal", StringComparison.OrdinalIgnoreCase);
+
             string sTps;
             if (activeHere)
             {
-                sTps = hud.ActivePhaseLabel + " · " + hud.ActiveElapsedSec + "s";
+                sTps = isLabeled
+                    ? (hud.ActivePhaseLabel + " · " + hud.ActiveElapsedSec + "s")
+                    : (hud.ActivePhaseLabel + " " + hud.ActiveElapsedSec + "s");
             }
             else if (lat != null && lat.Tps.HasValue)
             {
-                sTps = Math.Round(lat.Tps.Value) + " t/s" + (lat.DurationSec.HasValue ? (" · " + Math.Round(lat.DurationSec.Value) + "s") : "");
+                sTps = Math.Round(lat.Tps.Value) + (isLabeled ? " t/s" : "t/s");
             }
             else if (lat != null && lat.DurationSec.HasValue)
             {
@@ -402,13 +408,8 @@ namespace AntigravityHud
             }
             else
             {
-                sTps = "-- t/s";
+                sTps = isLabeled ? "-- t/s" : "--t/s";
             }
-            string mTag = lat != null ? lat.ShortTag : I18n.T("待命", "Idle");
-            string mTone = lat != null ? lat.Tone : "muted";
-            string sTurns = (hud != null && hud.TotalTurns > 0)
-                ? I18n.TF("{0}轮", "{0}t", hud.TotalTurns)
-                : "";
             string iqLbl = hud != null ? hud.IqLabel : I18n.T("思考", "Think");
             string iqPill = hud != null ? hud.IqPill : "--";
             string iqLv = hud != null ? hud.IqLevel : "idle";
@@ -426,11 +427,11 @@ namespace AntigravityHud
                     gm.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
                     wPass = DrawCapsuleContents(gm, 0, _barHeight, false,
                         rawPct, sPct, sUsed, cPct, hud != null ? hud.TotalTurns : 0, sCache,
-                        sTps, mTag, mTone, sTurns, iqLbl, iqPill, iqLv, running, _isDragging,
+                        sTps, iqLbl, iqPill, iqLv, running, _isDragging, isLabeled, isMinimal,
                         fBold, fReg, fMono);
                 }
 
-                computedW = Math.Max(S(240), wPass);
+                computedW = Math.Max(S(146), wPass);
                 var bmp = new Bitmap(computedW, _barHeight, PixelFormat.Format32bppArgb);
                 using (Graphics g = Graphics.FromImage(bmp))
                 {
@@ -482,7 +483,7 @@ namespace AntigravityHud
 
                     DrawCapsuleContents(g, computedW, _barHeight, true,
                         rawPct, sPct, sUsed, cPct, hud != null ? hud.TotalTurns : 0, sCache,
-                        sTps, mTag, mTone, sTurns, iqLbl, iqPill, iqLv, running, _isDragging,
+                        sTps, iqLbl, iqPill, iqLv, running, _isDragging, isLabeled, isMinimal,
                         fBold, fReg, fMono);
                 }
                 return bmp;
@@ -492,8 +493,8 @@ namespace AntigravityHud
         private int DrawCapsuleContents(
             Graphics g, int totalW, int totalH, bool draw,
             double rawPct, string sPct, string sUsed, double cPct, int totalTurns, string sCache,
-            string sTps, string mTag, string mTone, string sTurns,
-            string iqLbl, string iqPill, string iqLv, bool running, bool dragging,
+            string sTps, string iqLbl, string iqPill, string iqLv, bool running, bool dragging,
+            bool isLabeled, bool isMinimal,
             Font fBold, Font fReg, Font fMono)
         {
             Color colMain = Color.FromArgb(24, 24, 27);
@@ -503,8 +504,11 @@ namespace AntigravityHud
             Color colWarn = Color.FromArgb(245, 158, 11);
             Color colDanger = Color.FromArgb(239, 68, 68);
 
+            int padEnd = isLabeled ? 10 : 9;
+            int sepPad = isLabeled ? 5 : 4;
+            int chipPad = isLabeled ? 9 : 8;
             int cy = totalH / 2;
-            int x = S(11);
+            int x = S(padEnd);
 
             // Subtle 6-dot drag grip handle while actively dragging
             if (dragging)
@@ -528,7 +532,7 @@ namespace AntigravityHud
                 x += S(10);
             }
 
-            // 1. Progress Ring + Pct + Used
+            // 1. Progress Ring + Pct (+ optional used tokens)
             int ringD = S(14);
             if (draw)
             {
@@ -554,11 +558,15 @@ namespace AntigravityHud
                     }
                 }
             }
-            x += ringD + S(5);
-            x += MeasureOrDrawStr(g, sPct, fBold, colMain, x, cy, draw) + S(3);
-            x += MeasureOrDrawStr(g, sUsed, fReg, colSub, x, cy, draw);
+            x += ringD + S(4);
+            x += MeasureOrDrawStr(g, sPct, fBold, colMain, x, cy, draw);
+            if (!isMinimal)
+            {
+                x += S(2.5f);
+                x += MeasureOrDrawStr(g, sUsed, fReg, colSub, x, cy, draw);
+            }
 
-            x = StepSep(g, x + S(6), cy, S(12), colDiv, draw);
+            x = StepSep(g, x + S(sepPad), cy, S(12), colDiv, sepPad, draw);
 
             // 2. Cache Hit %
             int dotD = S(6);
@@ -571,45 +579,34 @@ namespace AntigravityHud
                     g.FillEllipse(br, x, cy - dotD / 2f, dotD, dotD);
                 }
             }
-            x += dotD + S(4);
-            x += MeasureOrDrawStr(g, I18n.T("缓存 ", "Cache "), fReg, colSub, x, cy, draw);
+            x += dotD + S(isLabeled ? 4 : 3);
+            if (isLabeled)
+            {
+                x += MeasureOrDrawStr(g, I18n.T("缓存 ", "Cache "), fReg, colSub, x, cy, draw);
+            }
             x += MeasureOrDrawStr(g, sCache, fBold, colMain, x, cy, draw);
 
-            x = StepSep(g, x + S(6), cy, S(12), colDiv, draw);
+            x = StepSep(g, x + S(sepPad), cy, S(12), colDiv, sepPad, draw);
 
             // 3. Speed t/s or Live Thinking Elapsed Counter
             Color tpsCol = hudIsRunningColor(running, sTps) ? Color.FromArgb(5, 150, 105) : colMain;
             x += MeasureOrDrawStr(g, sTps, fBold, tpsCol, x, cy, draw);
 
-            x = StepSep(g, x + S(6), cy, S(12), colDiv, draw);
+            x = StepSep(g, x + S(sepPad), cy, S(12), colDiv, sepPad, draw);
 
-            // 4. Model Badge + Turn Count
-            Color tagBg, tagFg;
-            if (mTone == "carbon") { tagBg = Color.FromArgb(226, 232, 240); tagFg = Color.FromArgb(15, 23, 42); }
-            else if (mTone == "neon") { tagBg = Color.FromArgb(204, 251, 241); tagFg = Color.FromArgb(13, 148, 136); }
-            else if (mTone == "argon") { tagBg = Color.FromArgb(232, 240, 254); tagFg = Color.FromArgb(37, 99, 235); }
-            else if (mTone == "fast") { tagBg = Color.FromArgb(218, 248, 236); tagFg = Color.FromArgb(5, 150, 105); }
-            else { tagBg = Color.FromArgb(234, 237, 242); tagFg = colSub; }
-
-            x += MeasureOrDrawChip(g, mTag, fMono, tagBg, tagFg, x, cy, S(5), draw);
-            if (!string.IsNullOrEmpty(sTurns))
+            // 4. Thinking IQ Chip
+            if (isLabeled)
             {
-                x += S(4);
-                x += MeasureOrDrawStr(g, sTurns, fReg, colSub, x, cy, draw);
+                x += MeasureOrDrawStr(g, iqLbl + " ", fReg, colSub, x, cy, draw);
             }
-
-            x = StepSep(g, x + S(6), cy, S(12), colDiv, draw);
-
-            // 5. Thinking IQ Chip
-            x += MeasureOrDrawStr(g, iqLbl + " ", fReg, colSub, x, cy, draw);
             Color iqBg = Color.FromArgb(232, 236, 242);
             Color iqFg = colSub;
             if (iqLv == "ok") { iqBg = Color.FromArgb(224, 242, 254); iqFg = Color.FromArgb(2, 132, 199); }
             else if (iqLv == "warn") { iqBg = Color.FromArgb(254, 243, 199); iqFg = Color.FromArgb(180, 83, 9); }
             else if (iqLv == "danger") { iqBg = Color.FromArgb(254, 226, 226); iqFg = Color.FromArgb(220, 38, 38); }
 
-            x += MeasureOrDrawChip(g, iqPill, fMono, iqBg, iqFg, x, cy, S(8), draw);
-            x += S(11);
+            x += MeasureOrDrawChip(g, iqPill, fMono, iqBg, iqFg, x, cy, S(8), chipPad, draw);
+            x += S(padEnd);
             return x;
         }
 
@@ -638,10 +635,10 @@ namespace AntigravityHud
             return w;
         }
 
-        private int MeasureOrDrawChip(Graphics g, string txt, Font font, Color bg, Color fg, int x, int cy, int radius, bool draw)
+        private int MeasureOrDrawChip(Graphics g, string txt, Font font, Color bg, Color fg, int x, int cy, int radius, int padX, bool draw)
         {
             SizeF sz = g.MeasureString(txt, font, 1000, StringFormat.GenericTypographic);
-            int w = (int)Math.Ceiling(sz.Width) + S(10);
+            int w = (int)Math.Ceiling(sz.Width) + S(padX);
             int h = S(17);
             if (draw)
             {
@@ -665,7 +662,7 @@ namespace AntigravityHud
             return w;
         }
 
-        private int StepSep(Graphics g, int x, int cy, int h, Color col, bool draw)
+        private int StepSep(Graphics g, int x, int cy, int h, Color col, int padRight, bool draw)
         {
             if (draw)
             {
@@ -674,7 +671,7 @@ namespace AntigravityHud
                     g.DrawLine(pen, x, cy - h / 2, x, cy + h / 2);
                 }
             }
-            return x + S(6);
+            return x + S(padRight);
         }
 
         private static GraphicsPath MakeRoundRect(Rectangle rc, int radius)
@@ -699,12 +696,12 @@ namespace AntigravityHud
                 l != null ? l.TotalUsed : 0,
                 l != null ? l.CacheHitPct : 0,
                 l != null && l.Tps.HasValue ? l.Tps.Value : -1,
-                l != null ? l.ShortTag : "",
                 h != null ? h.TotalTurns : 0,
                 h != null ? h.IqPill : "",
                 (h != null && h.IsRunning) || (_data != null && _data.ActiveWorkingCount > 0),
                 h != null && h.IsRunning ? h.ActiveElapsedSec : 0,
                 _scaleMode,
+                _config != null ? _config.BarStyle : "compact",
                 I18n.IsZh ? "ZH" : "EN",
                 (_hovered ? "H" : "") + (_popupOpen ? "P" : "") + (_isDragging ? "D" : ""));
 

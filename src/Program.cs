@@ -79,12 +79,14 @@ namespace AntigravityHud
                 PositionLocked = false,
                 Language = "en",
                 AutoMemoryGuard = false,
-                ScaleMode = "auto"
+                ScaleMode = "auto",
+                BarStyle = "minimal"
             };
             ConfigStore.Save(cfg);
             UserConfig loaded = ConfigStore.Load();
             if (loaded.AnchorMode != "custom" || loaded.CustomX != 1280 || loaded.CustomY != 24 ||
-                loaded.HorizontalAlign != "right" || loaded.Language != "en" || loaded.AutoMemoryGuard)
+                loaded.HorizontalAlign != "right" || loaded.Language != "en" || loaded.AutoMemoryGuard ||
+                loaded.BarStyle != "minimal")
             {
                 Environment.Exit(2);
             }

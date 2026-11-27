@@ -11,7 +11,7 @@
 > **仅支持 Windows 10 / 11** — 采用纯原生 C# WinForms + Win32 分层透明窗口（`UpdateLayeredWindow`）编写。无 Electron、无 Node.js、零第三方依赖，不改客户端任何安装包文件。
 
 <p align="center">
-  <img src="docs/preview-bar-zh.png" alt="任务栏悬浮胶囊" width="520" />
+  <img src="docs/preview-bar-zh.png" alt="任务栏悬浮胶囊" width="320" />
 </p>
 
 <p align="center">

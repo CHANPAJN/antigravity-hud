@@ -11,7 +11,7 @@ English | [简体中文](README.zh-CN.md)
 > **Windows Only** — Built specifically for **Windows 10 / 11** with pure C# WinForms + Win32 Layered Windows (`UpdateLayeredWindow`). Zero Electron, zero Node.js, zero third-party packages, and zero client file patching.
 
 <p align="center">
-  <img src="docs/preview-bar.png" alt="Floating Taskbar Capsule" width="520" />
+  <img src="docs/preview-bar.png" alt="Floating Taskbar Capsule" width="320" />
 </p>
 
 <p align="center">

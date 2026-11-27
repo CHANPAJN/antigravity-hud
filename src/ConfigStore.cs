@@ -17,6 +17,7 @@ namespace AntigravityHud
         public string Language = "auto"; // "auto" | "zh" | "en"
         public bool AutoMemoryGuard = false; // Opt-in only
         public string ScaleMode = "auto"; // "auto" | "256k" | "1m"
+        public string BarStyle = "compact"; // "compact" | "labeled" | "minimal"
     }
 
     internal static class ConfigStore
@@ -71,6 +72,9 @@ namespace AntigravityHud
 
                 string scale = JsonFastHelper.ExtractString(raw, "scaleMode", 0);
                 if (scale == "auto" || scale == "256k" || scale == "1m") cfg.ScaleMode = scale;
+
+                string barStyle = JsonFastHelper.ExtractString(raw, "barStyle", 0);
+                if (barStyle == "compact" || barStyle == "labeled" || barStyle == "minimal") cfg.BarStyle = barStyle;
             }
             catch { }
             return cfg;
@@ -94,7 +98,8 @@ namespace AntigravityHud
                 sb.AppendFormat(CultureInfo.InvariantCulture, "  \"positionLocked\": {0},\n", cfg.PositionLocked ? "true" : "false");
                 sb.AppendFormat(CultureInfo.InvariantCulture, "  \"language\": \"{0}\",\n", EscapeJson(cfg.Language ?? "auto"));
                 sb.AppendFormat(CultureInfo.InvariantCulture, "  \"autoMemoryGuard\": {0},\n", cfg.AutoMemoryGuard ? "true" : "false");
-                sb.AppendFormat(CultureInfo.InvariantCulture, "  \"scaleMode\": \"{0}\"\n", EscapeJson(cfg.ScaleMode ?? "auto"));
+                sb.AppendFormat(CultureInfo.InvariantCulture, "  \"scaleMode\": \"{0}\",\n", EscapeJson(cfg.ScaleMode ?? "auto"));
+                sb.AppendFormat(CultureInfo.InvariantCulture, "  \"barStyle\": \"{0}\"\n", EscapeJson(cfg.BarStyle ?? "compact"));
                 sb.AppendLine("}");
 
                 string fp = ConfigFilePath;

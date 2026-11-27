@@ -126,7 +126,21 @@ powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1
    - **开机自启**：默认关闭，仅在传 `-Autostart` 或右键勾选「开机自动启动」时写入当前用户的 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`。
    - **自动省存与缓存清理**：「省存」开关默认 **`关`**；仅在用户主动开启或手动点击「清缓存 / 释存」时，才清理 Antigravity 目录下的 `tempmediaStorage` 与 `crashes` 临时文件，并调用标准 Win32 `EmptyWorkingSet` 修剪工作集。**绝不终止任何进程，绝不删除任何对话日志**。
 4. **平台边界**：
-   - **仅支持 Windows 10 / 11**，不计划支持 macOS / Linux（胶囊强依赖 Win32 分层窗口与 Windows 任务栏外壳 API）。
+   - 主仓当前专注 **Windows 10 / 11** 原生 Win32 体验（依赖分层窗口与任务栏外壳 API）；欢迎 macOS 开发者参考下方说明一起共创原生 Swift 菜单栏版。
+
+---
+
+## 关于 macOS / 诚邀原生版共创
+
+目前主仓库专注把 **Windows 10 / 11** 的 Win32 原生悬浮体验打磨到位。因为手头没有 Mac 真机，不希望在没法真机实测的情况下盲写半成品，所以没有强行套 Electron 做跨平台。
+
+如果你是 macOS 用户，同样喜欢保持官方 Antigravity 客户端一尘不染，非常欢迎一起共创 **原生 Swift 菜单栏版（Menu Bar + Popover）**：
+
+- **日志与数据结构可直接复用**：macOS 端本地会话目录同样在 `~/.gemini/antigravity*/brain/`，增量解析与统计逻辑可直接参考 [TelemetryEngine.cs](src/TelemetryEngine.cs) 与 [Models.cs](src/Models.cs)。
+- **唯一共同约定**：不改客户端文件、不塞插件、纯本地 0 外联、不碰账号凭据、尽量原生轻量。
+- **两种共创方式都欢迎**：
+  1. 直接向本仓库提交 PR（放到独立的 `macos/` 目录）；
+  2. 或者你单独维护一个 macOS 仓库，发 Issue 告诉我，实测通过后会直接挂到本页顶部作为官方推荐的 macOS 姊妹版。
 
 ---
 

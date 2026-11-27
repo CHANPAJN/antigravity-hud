@@ -127,7 +127,19 @@ Antigravity HUD is designed to be auditable from top to bottom in plain C# sourc
    - **Autostart**: disabled by default; written to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` only if you run `install.ps1 -Autostart` or check `Launch at Windows Login` in the menu.
    - **Memory Helper & Cache Clean**: `AutoTrim` defaults to **`Off`**. When manually clicked (or explicitly enabled), it only deletes files inside Antigravity's `tempmediaStorage` and `crashes` folders and calls standard Win32 `EmptyWorkingSet` on Antigravity processes. It **never terminates any process** and never touches conversation logs.
 4. **Platform Boundary**:
-   - **Windows 10 / 11 only**. macOS and Linux are intentionally not targeted because the capsule relies directly on Win32 layered windows (`WS_EX_LAYERED | WS_EX_NOACTIVATE`) and the Windows taskbar shell (`Shell_TrayWnd`).
+   - Currently focuses on **Windows 10 / 11** (`WS_EX_LAYERED | WS_EX_NOACTIVATE` + `Shell_TrayWnd`). Interested in co-building a native macOS version? See the section below.
+
+---
+
+## macOS & Community Port (Contributors Welcome)
+
+This repository currently focuses on delivering a rock-solid native **Windows 10 / 11** experience. Because I don't own a Mac for real-device testing, I deliberately avoided shipping an untested port or wrapping everything in Electron.
+
+If you're on macOS and share the same goal — keeping the official Google Antigravity client spotless — a **native Swift Menu Bar (`NSStatusBar` + `NSPopover`) port** is warmly welcome:
+
+- **Reusable Core Logic**: Local transcript paths (`~/.gemini/antigravity*/brain/`) and incremental parsing/ledger rules can be ported directly from [TelemetryEngine.cs](src/TelemetryEngine.cs) and [Models.cs](src/Models.cs).
+- **Shared Ground Rules**: Zero client patching, zero injected extensions, strictly local/offline, zero credential access, and lightweight native UI.
+- **How to Collaborate**: Open a PR under a dedicated `macos/` directory, or build a standalone macOS repo and drop an issue — once verified, I'll feature and link it right at the top of this README as the official macOS companion.
 
 ---
 

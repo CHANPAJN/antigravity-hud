@@ -114,6 +114,20 @@ powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1
 
 ---
 
+## 可选进阶：外部付费 API 离线费用账本（绝不碰密钥）
+
+如果你在使用 Antigravity 订阅的同时，还通过自有 API Key 调用外部付费接口（例如 Gemini API 生图/生视频/TTS 或自定义脚本），Antigravity HUD 支持在底栏右侧**按需自动显示当日与本月 API 费用**——**默认完全隐藏**，100% 纯本地只读，绝不读取任何 API Key、不发起任何网络请求。
+
+只需让你的调用脚本向 `%USERPROFILE%\.gemini\data\paid_api_ledger.jsonl` 追加一行 JSON 记录：
+
+```json
+{"date":"2026-11-27","model":"gemini-omni-1.2-flash","kind":"video","cost_usd":0.42}
+```
+
+可选字段：`op_id`（幂等去重）、`ts`（时间戳）、`cid`（关联到对应会话 ID 显示单窗消耗）。若本机无此文件，底栏自动隐藏不占任何版面。
+
+---
+
 ## 本地编译与自动化校验
 
 ```powershell

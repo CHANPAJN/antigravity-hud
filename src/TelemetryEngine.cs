@@ -20,10 +20,15 @@ namespace AntigravityHud
     internal sealed class LocalTelemetryEngine
     {
         private readonly string _geminiRoot;
+        private readonly string _extApiLedgerPath;
         public readonly LocalMemoryGuard MemGuard;
         private readonly Dictionary<string, ConvTrackState> _states = new Dictionary<string, ConvTrackState>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, HudCacheEntry> _hudCache = new Dictionary<string, HudCacheEntry>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, DateTime> _stepFinishUtcMap = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+        private long _extApiLedgerOffset;
+        private int _extApiLedgerLineSeq;
+        private DateTime _extApiLedgerMtimeUtc = DateTime.MinValue;
+        private readonly Dictionary<string, ExternalApiRecord> _extApiRecords = new Dictionary<string, ExternalApiRecord>(StringComparer.Ordinal);
 
 
         private DateTime _lastDirScanUtc = DateTime.MinValue;
@@ -218,12 +223,129 @@ namespace AntigravityHud
         public LocalTelemetryEngine(string userProfile, bool autoMemoryGuard = false)
         {
             _geminiRoot = Path.Combine(userProfile, ".gemini");
+            _extApiLedgerPath = Path.Combine(_geminiRoot, "data", "paid_api_ledger.jsonl");
             MemGuard = new LocalMemoryGuard(userProfile, autoMemoryGuard);
         }
 
         public void InvalidateLanguageCache()
         {
             _hudCache.Clear();
+        }
+
+        private void RefreshExternalApiLedger(bool forceFull)
+        {
+            try
+            {
+                if (!File.Exists(_extApiLedgerPath))
+                {
+                    if (_extApiRecords.Count > 0)
+                    {
+                        _extApiRecords.Clear();
+                        _extApiLedgerOffset = 0;
+                        _extApiLedgerLineSeq = 0;
+                        _extApiLedgerMtimeUtc = DateTime.MinValue;
+                    }
+                    return;
+                }
+
+                var fi = new FileInfo(_extApiLedgerPath);
+                if (forceFull || fi.Length < _extApiLedgerOffset)
+                {
+                    _extApiLedgerOffset = 0;
+                    _extApiLedgerLineSeq = 0;
+                    _extApiRecords.Clear();
+                }
+
+                if (fi.Length > _extApiLedgerOffset || fi.LastWriteTimeUtc != _extApiLedgerMtimeUtc)
+                {
+                    using (var fs = new FileStream(_extApiLedgerPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        fs.Seek(_extApiLedgerOffset, SeekOrigin.Begin);
+                        using (var sr = new StreamReader(fs, Encoding.UTF8, false, 4096, true))
+                        {
+                            string ln;
+                            while ((ln = sr.ReadLine()) != null)
+                            {
+                                _extApiLedgerLineSeq++;
+                                if (string.IsNullOrWhiteSpace(ln) || ln.IndexOf("cost_usd", StringComparison.Ordinal) < 0) continue;
+                                double usd = JsonFastHelper.ExtractDouble(ln, "cost_usd");
+                                if (usd <= 0.0) continue;
+
+                                string opId = JsonFastHelper.ExtractString(ln, "op_id", 0);
+                                string recKey = !string.IsNullOrEmpty(opId) ? opId : ("line_" + _extApiLedgerLineSeq);
+                                string dtKey = JsonFastHelper.ExtractString(ln, "date", 0);
+                                string ts = JsonFastHelper.ExtractString(ln, "ts", 0);
+                                if (string.IsNullOrEmpty(dtKey) && ts.Length >= 10) dtKey = ts.Substring(0, 10);
+                                if (string.IsNullOrEmpty(dtKey)) dtKey = DateTime.Now.ToString("yyyy-MM-dd");
+
+                                _extApiRecords[recKey] = new ExternalApiRecord
+                                {
+                                    RecordKey = recKey,
+                                    DateKey = dtKey,
+                                    Ts = ts,
+                                    Cid = JsonFastHelper.ExtractString(ln, "cid", 0),
+                                    Model = JsonFastHelper.ExtractString(ln, "model", 0),
+                                    Kind = JsonFastHelper.ExtractString(ln, "kind", 0),
+                                    CostUsd = usd
+                                };
+                            }
+                        }
+                        _extApiLedgerOffset = fs.Position;
+                    }
+                    _extApiLedgerMtimeUtc = fi.LastWriteTimeUtc;
+                }
+            }
+            catch { }
+        }
+
+        private ExternalApiSnapshot BuildExternalApiSnapshot(string todayKey, string monthPrefix, string activeCid)
+        {
+            var snap = new ExternalApiSnapshot();
+            if (_extApiRecords.Count == 0) return snap;
+
+            snap.HasLedger = true;
+            string latestSortKey = "";
+            foreach (var kv in _extApiRecords)
+            {
+                ExternalApiRecord r = kv.Value;
+                snap.TotalUsd += r.CostUsd;
+                if (r.DateKey == todayKey)
+                {
+                    snap.TodayUsd += r.CostUsd;
+                    snap.TodayCalls++;
+                }
+                if (!string.IsNullOrEmpty(r.DateKey) && r.DateKey.StartsWith(monthPrefix, StringComparison.Ordinal))
+                {
+                    snap.MonthUsd += r.CostUsd;
+                    snap.MonthCalls++;
+                }
+                if (!string.IsNullOrEmpty(activeCid) && !string.IsNullOrEmpty(r.Cid) &&
+                    string.Equals(r.Cid, activeCid, StringComparison.OrdinalIgnoreCase))
+                {
+                    snap.ConvUsd += r.CostUsd;
+                    snap.ConvCalls++;
+                }
+
+                string sk = !string.IsNullOrEmpty(r.Ts) ? r.Ts : (r.DateKey + "_" + r.RecordKey);
+                if (string.CompareOrdinal(sk, latestSortKey) >= 0)
+                {
+                    latestSortKey = sk;
+                    snap.LatestModel = string.IsNullOrEmpty(r.Model) ? "api" : r.Model;
+                    snap.LatestKind = r.Kind ?? "";
+                    snap.LatestDate = r.DateKey ?? "";
+                    snap.LatestUsd = r.CostUsd;
+                }
+            }
+
+            string kindPart = string.IsNullOrEmpty(snap.LatestKind) ? "" : ("/" + snap.LatestKind);
+            string latestPart = string.IsNullOrEmpty(snap.LatestModel)
+                ? ""
+                : I18n.TF(" · 最近 {0}{1} ${2:F2}", " · Last {0}{1} ${2:F2}", snap.LatestModel, kindPart, snap.LatestUsd);
+            snap.HoverDetail = I18n.TF(
+                "本地外部 API 离线账本 (今日 {0} 笔 · 本月 {1} 笔{2}) · 0 密钥读取",
+                "Local external API ledger ({0} today · {1} this month{2}) · zero key access",
+                snap.TodayCalls, snap.MonthCalls, latestPart);
+            return snap;
         }
 
         public DashboardData Query(string selectedConvKey, bool forceFullScan, string activeWindowTitle = "")
@@ -253,7 +375,10 @@ namespace AntigravityHud
                 UpdateConversationIncremental(kv.Value);
             }
 
+            RefreshExternalApiLedger(forceFullScan);
             DashboardData res = BuildDashboardData(now, todayKey, selectedConvKey, activeWindowTitle);
+            string activeCid = (res.ActiveHud != null && !string.IsNullOrEmpty(res.ActiveHud.Cid)) ? res.ActiveHud.Cid : "";
+            res.ExternalApi = BuildExternalApiSnapshot(todayKey, now.ToString("yyyy-MM-"), activeCid);
             res.MemGuard = MemGuard.GetSnapshot(forceFullScan);
             return res;
         }

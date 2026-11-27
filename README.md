@@ -115,6 +115,20 @@ Antigravity HUD is designed to be auditable from top to bottom in plain C# sourc
 
 ---
 
+## Optional: Offline External API Cost Ledger (Zero Key Access)
+
+If you also invoke pay-as-you-go external APIs (such as Gemini API for video/image/TTS or OpenAI/Anthropic scripts) alongside your Antigravity subscription, Antigravity HUD can optionally display daily & monthly API spend in the footer — **completely hidden by default** and without ever reading any API keys or making network calls.
+
+Simply append one JSON line per call to `%USERPROFILE%\.gemini\data\paid_api_ledger.jsonl`:
+
+```json
+{"date":"2026-11-27","model":"gemini-omni-1.2-flash","kind":"video","cost_usd":0.42}
+```
+
+Supported optional fields: `op_id` (deduplication), `ts` (ISO timestamp), `cid` (link spend to a specific Antigravity conversation). When the file does not exist, the footer bar stays completely clean.
+
+---
+
 ## Verification & Self-Test
 
 ```powershell

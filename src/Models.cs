@@ -462,6 +462,34 @@ namespace AntigravityHud
         }
     }
 
+    internal sealed class ExternalApiRecord
+    {
+        public string RecordKey = "";
+        public string DateKey = "";
+        public string Ts = "";
+        public string Cid = "";
+        public string Model = "";
+        public string Kind = "";
+        public double CostUsd;
+    }
+
+    internal sealed class ExternalApiSnapshot
+    {
+        public bool HasLedger;
+        public double TodayUsd;
+        public int TodayCalls;
+        public double MonthUsd;
+        public int MonthCalls;
+        public double ConvUsd;
+        public int ConvCalls;
+        public double TotalUsd;
+        public string LatestModel = "";
+        public string LatestKind = "";
+        public string LatestDate = "";
+        public double LatestUsd;
+        public string HoverDetail = "";
+    }
+
     internal sealed class DashboardData
     {
         public string TodayDateStr = "";
@@ -469,6 +497,7 @@ namespace AntigravityHud
         public List<ConvOptionItem> RecentOptions = new List<ConvOptionItem>();
         public HudSnapshot ActiveHud;
         public MemGuardSnapshot MemGuard = new MemGuardSnapshot();
+        public ExternalApiSnapshot ExternalApi = new ExternalApiSnapshot();
         public PeriodSummary Today = new PeriodSummary();
         public PeriodSummary Yesterday = new PeriodSummary();
         public PeriodSummary Days7 = new PeriodSummary();

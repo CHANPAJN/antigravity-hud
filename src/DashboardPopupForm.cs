@@ -395,11 +395,18 @@ namespace AntigravityHud
 
             if (_rcPosHintBar.Contains(e.Location))
             {
-                UserConfig cfg = _getConfig != null ? _getConfig() : null;
-                bool isCustom = cfg != null && string.Equals(cfg.AnchorMode, "custom", StringComparison.OrdinalIgnoreCase);
-                newHover = isCustom
-                    ? I18n.T("点击重置到默认任务栏位置 · 长按悬浮胶囊可随时拖动", "Click to reset to taskbar default · Hold bar to reposition")
-                    : I18n.T("长按悬浮胶囊（≥0.3s）可自由拖动到任意位置或副屏", "Hold the floating bar to drag it anywhere across monitors");
+                if (_data != null && _data.ExternalApi != null && _data.ExternalApi.HasLedger)
+                {
+                    newHover = _data.ExternalApi.HoverDetail;
+                }
+                else
+                {
+                    UserConfig cfg = _getConfig != null ? _getConfig() : null;
+                    bool isCustom = cfg != null && string.Equals(cfg.AnchorMode, "custom", StringComparison.OrdinalIgnoreCase);
+                    newHover = isCustom
+                        ? I18n.T("点击重置到默认任务栏位置 · 长按悬浮胶囊可随时拖动", "Click to reset to taskbar default · Hold bar to reposition")
+                        : I18n.T("长按悬浮胶囊（≥0.3s）可自由拖动到任意位置或副屏", "Hold the floating bar to drag it anywhere across monitors");
+                }
             }
             else if (_rcLangBtn.Contains(e.Location))
             {
@@ -821,10 +828,14 @@ namespace AntigravityHud
             }
             if (_rcPosHintBar.Contains(e.Location))
             {
-                UserConfig cfg = _getConfig != null ? _getConfig() : null;
-                if (cfg != null && string.Equals(cfg.AnchorMode, "custom", StringComparison.OrdinalIgnoreCase))
+                bool hasExtApi = _data != null && _data.ExternalApi != null && _data.ExternalApi.HasLedger;
+                if (!hasExtApi)
                 {
-                    if (_onResetPosition != null) _onResetPosition();
+                    UserConfig cfg = _getConfig != null ? _getConfig() : null;
+                    if (cfg != null && string.Equals(cfg.AnchorMode, "custom", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (_onResetPosition != null) _onResetPosition();
+                    }
                 }
                 return;
             }
@@ -1427,7 +1438,7 @@ namespace AntigravityHud
                 // ================= 4. UNIFIED COMPACT MEM GUARD + API BAR & FOOTER =================
                 int fy = Height - pad - footerH;
                 int py = fy - S(6) - opsBarH;
-                DrawCompactOpsBar(g, pad, py, contentW, opsBarH, _data != null ? _data.MemGuard : null, fMeta, fMetaBold);
+                DrawCompactOpsBar(g, pad, py, contentW, opsBarH, _data != null ? _data.MemGuard : null, _data != null ? _data.ExternalApi : null, fMeta, fMetaBold);
                 DrawFooterBar(g, pad, fy, contentW, footerH, hud, fMeta, fMetaBold);
             }
 
@@ -3340,10 +3351,14 @@ namespace AntigravityHud
         private void DrawCompactOpsBar(
             Graphics g, int x, int y, int w, int h,
             MemGuardSnapshot mgSpec,
+            ExternalApiSnapshot extApi,
             Font fSmall, Font fSmallBold)
         {
             MemGuardSnapshot mg = mgSpec ?? new MemGuardSnapshot();
             bool hasMemWarn = mg.IsMemHigh || mg.TempCacheCount > 0;
+            bool hasExtLedger = extApi != null && extApi.HasLedger;
+            bool hasExtConv = hasExtLedger && extApi.ConvUsd > 0.0001;
+            bool hasExtToday = hasExtLedger && extApi.TodayUsd > 0.0001;
             UserConfig cfg = _getConfig != null ? _getConfig() : null;
             bool isCustomPos = cfg != null && string.Equals(cfg.AnchorMode, "custom", StringComparison.OrdinalIgnoreCase);
             bool isPosLocked = cfg != null && cfg.PositionLocked;
@@ -3371,8 +3386,8 @@ namespace AntigravityHud
             int btnCleanW = Math.Max(S(44), MeasureTxtW(g, cleanTxt, fSmallBold) + S(14));
             int memTxtW = MeasureTxtW(g, memLbl, fSmallBold) + S(6);
             int compactLeftW = S(18) + memTxtW + S(6) + btnAutoW + S(4) + btnCleanW + S(8);
-            int maxLeftW = (int)Math.Round(w * 0.58);
-            int leftW = Math.Max(S(184), Math.Min(maxLeftW, compactLeftW));
+            int maxLeftW = (int)Math.Round(w * (hasExtConv ? 0.48 : 0.56));
+            int leftW = Math.Max(S(180), Math.Min(maxLeftW, compactLeftW));
             int divX = x + leftW;
 
             _rcCleanMemBtn = new Rectangle(divX - S(6) - btnCleanW, btnY, btnCleanW, btnH);
@@ -3406,17 +3421,42 @@ namespace AntigravityHud
             }
 
             _rcPosHintBar = new Rectangle(divX + 1, y, x + w - divX - 1, h);
-            if (isCustomPos && _rcPosHintBar.Contains(_mousePt))
+            if ((hasExtLedger || isCustomPos) && _rcPosHintBar.Contains(_mousePt))
             {
                 var rcRightHi = new Rectangle(divX + S(2), y + S(2), x + w - divX - S(4), h - S(4));
                 FillRoundCard(g, rcRightHi, S(6), ColHoverFill, ColHoverFill);
             }
 
+            int rightTxtX = divX + S(18);
+            int rightAvailW = Math.Max(S(40), (x + w - S(8)) - rightTxtX);
+
+            if (hasExtLedger)
+            {
+                Color apiDotCol = hasExtConv ? ColWarn : (hasExtToday ? ColOk : Color.FromArgb(156, 163, 175));
+                DrawStatusDot(g, divX + S(10), cy, S(6), apiDotCol, false);
+
+                Font apiFont = (hasExtConv || hasExtToday) ? fSmallBold : fSmall;
+                string apiTxt;
+                Color apiValCol;
+                if (hasExtConv)
+                {
+                    apiValCol = ColWarnText;
+                    string c1 = I18n.TF("窗 ${0:F2} · 日 ${1:F2} · 月 ${2:F2}", "Chat ${0:F2} · D ${1:F2} · M ${2:F2}", extApi.ConvUsd, extApi.TodayUsd, extApi.MonthUsd);
+                    string c2 = I18n.TF("窗${0:F2} · 日${1:F2} · 月${2:F2}", "C${0:F2} · D${1:F2} · M${2:F2}", extApi.ConvUsd, extApi.TodayUsd, extApi.MonthUsd);
+                    apiTxt = MeasureTxtW(g, c1, apiFont) <= rightAvailW ? c1 : c2;
+                }
+                else
+                {
+                    apiTxt = I18n.TF("API 日 ${0:F2} · 月 ${1:F2}", "API Day ${0:F2} · Mo ${1:F2}", extApi.TodayUsd, extApi.MonthUsd);
+                    apiValCol = hasExtToday ? ColOkText : ColTextMain;
+                }
+                DrawTxtR(g, apiTxt, apiFont, apiValCol, new Rectangle(rightTxtX, y, rightAvailW, h));
+                return;
+            }
+
             Color posDotCol = isCustomPos ? ColAccent : (isPosLocked ? ColWarn : Color.FromArgb(156, 163, 175));
             DrawStatusDot(g, divX + S(10), cy, S(6), posDotCol, false);
 
-            int rightTxtX = divX + S(18);
-            int rightAvailW = Math.Max(S(40), (x + w - S(8)) - rightTxtX);
             string rightTxt;
             Color rightCol = ColTextSub;
             if (isCustomPos)
